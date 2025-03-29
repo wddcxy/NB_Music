@@ -389,11 +389,17 @@ function createWindow() {
         win.minimize();
     });
 
-    ipcMain.on("window-maximize", () => {
-        if (win.isMaximized()) {
+    ipcMain.on("window-maximize", (_, order) => {
+        if (order === 'maximize') {
+            win.maximize();
+        } else if (order === 'unmaximize') {
             win.unmaximize();
         } else {
-            win.maximize();
+            if (win.isMaximized()) {
+                win.unmaximize();
+            } else {
+                win.maximize();
+            }
         }
     });
 

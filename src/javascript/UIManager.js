@@ -31,6 +31,7 @@ class UIManager {
         this.initializeCustomSelects();
         this.initializeWelcomeDialog();
         this.initializeTrayControls(); // 新增托盘控制初始化
+        this.autoMaximize();
     }
     initializeSearchSuggestions() {
         const searchInput = document.querySelector(".search input");
@@ -436,7 +437,7 @@ class UIManager {
             const action = button.dataset.action;
             switch (action) {
                 case "play":
-                    this.audioPlayer.play();
+                    // this.audioPlayer.play();
                     break;
                 case "prev":
                     this.audioPlayer.prev();
@@ -569,13 +570,13 @@ class UIManager {
 
         // 侧边栏点击事件
         document.addEventListener("dblclick", (event) => {
-            if (!event.target.closest(".sidebar") && !event.target.closest(".dock.sidebar") && this.settingManager.getSetting("hideSidebar") == "true") {
+            if (!event.target.closest(".sidebar") && !event.target.closest(".dock.sidebar") && this.settingManager.getSetting("hideSidebar") === "true") {
                 document.querySelector(".sidebar").style.transition = "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.04, 0.92, 0.4, 0.97)";
                 document.querySelector(".sidebar").parentElement.style.gridTemplateColumns = "0 auto";
                 document.querySelector(".sidebar").style.opacity = "0";
                 // document.querySelector(".sidebar").style.display = "none";
             }
-            if (!event.target.closest(".titbar") && this.settingManager.getSetting("hideTitbar") == "true") {
+            if (!event.target.closest(".titbar") && this.settingManager.getSetting("hideTitbar") === "true") {
                 document.querySelectorAll(".titbar .fadein").forEach((fadeItem) => {
                     fadeItem.classList.add("fadeout");
                 });
@@ -1137,7 +1138,7 @@ class UIManager {
         ipcRenderer.on("tray-control", (_, command) => {
             switch (command) {
                 case "play-pause":
-                    this.audioPlayer.play();
+                    // this.audioPlayer.play();
                     break;
                 case "next":
                     this.audioPlayer.next();
@@ -1227,6 +1228,14 @@ class UIManager {
             }
         } catch (error) {
             console.error("更新托盘信息失败:", error);
+        }
+    }
+
+    autoMaximize() {
+        if (this.settingManager.getSetting("autoMaximize") === "true") {
+            ipcRenderer.send("window-maximize", "maximize");
+        } else {
+            ipcRenderer.send("window-maximize", "unmaximize");
         }
     }
 }
