@@ -4,7 +4,7 @@
   "version": "1.0.1-Beta",
   "identifier": "com.nb-group.nb-music",
   "build": {
-    "frontendDist": "../src/dist",
+    "frontendDist": "../dist",
     "devUrl": "http://localhost:5858",
     "beforeDevCommand": "yarn vite_dev",
     "beforeBuildCommand": "yarn vite_build"

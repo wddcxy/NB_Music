@@ -5,7 +5,7 @@
     "main": "src/main.js",
     "scripts": {
         "vite_dev": "vite",
-        "vitee_build": "vite build",
+        "vite_build": "vite build",
         "preview": "vite preview",
         "dev": "tauri dev",
         "build": "tauri build"

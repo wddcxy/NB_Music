@@ -1,5 +1,5 @@
 "use strict";
-import {Window} from '@tauri-apps/api/window';
+import { getCurrentWindow } from "@tauri-apps/api/window";
 
 import  AudioPlayer  from "./javascript/AudioPlayer.js";
 import LyricsPlayer from "./javascript/LyricsPlayer.js";
@@ -34,7 +34,7 @@ class App {
     initializecomponents() {
         try {
             // 1. 创建基础组件
-            this.appWindow = new Window('main');
+            this.appWindow = getCurrentWindow();
             this.settingManager = new SettingManager();
             this.audioPlayer = new AudioPlayer(null); // 暂时传入null
             this.lyricsPlayer = new LyricsPlayer("暂无歌词，尽情欣赏音乐", this.audioPlayer.audio, this.settingManager);

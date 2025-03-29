@@ -1,4 +1,7 @@
 import { extractMusicTitle } from "../utils.js";
+import { invoke } from '@tauri-apps/api/core';
+import { TrayIcon } from "@tauri-apps/api/tray";
+import { defaultWindowIcon } from "@tauri-apps/api/app";
 
 export default class UIManager {
     constructor(settingManager, audioPlayer, playlistManager, favoriteManager, musicSearcher, appWindow) {
@@ -12,10 +15,21 @@ export default class UIManager {
         this.settingManager = settingManager;
         this.minimizeBtn = document.getElementById("maximize");
 
+        this.trayOptions = {
+            icon: defaultWindowIcon(),
+        };
+        this.tray =  TrayIcon.new(this.trayOptions);
+
         // 设置 AudioPlayer 的 settingManager
         if (this.audioPlayer) {
             this.audioPlayer.setSettingManager(settingManager);
         }
+
+        const tray = await TrayIcon.new(options);        let options = {
+            icon: await defaultWindowIcon(),
+        };
+
+        const tray = await TrayIcon.new(options);
 
         this.initializeEvents();
         this.initializePlayerControls();
@@ -25,7 +39,7 @@ export default class UIManager {
         this.initializeSearchSuggestions();
         this.initializeCustomSelects();
         this.initializeWelcomeDialog();
-        this.initializeTrayControls(); // 新增托盘控制初始化
+        this.initializeTray(); // 新增托盘控制初始化
     }
     initializeSearchSuggestions() {
         const searchInput = document.querySelector(".search input");
@@ -465,35 +479,48 @@ export default class UIManager {
             this.playlistManager.togglePlayMode();
         });
 
-        window.addEventListener("keydown", (e) => {
-            // F12 打开开发者工具
-            if (e.key === "F12") {
-                ipcRenderer.send("open-dev-tools");
-            }
-
-            // 空格键控制播放/暂停
-            if (e.key === " " && e.target.tagName !== "INPUT") {
-                // 避免在输入框中按空格触发
-                e.preventDefault(); // 阻止页面滚动
-                this.audioPlayer.play();
+        window.addEventListener("keydown", async (e) => {
+            switch (e.key) {
+                // F12 打开或关闭开发者工具
+                case "F12": {
+                    await invoke("open_devtools");
+                    break;
+                }
+                case "F11": {
+                    console.log('2');
+                    if (await this.appWindow.isFullscreen()) {
+                        await this.appWindow.setFullscreen(false);
+                    } else {
+                        await this.appWindow.setFullscreen(true);
+                    }
+                    break;
+                }
+                // 空格键控制播放/暂停
+                case " ": {
+                    if (e.target.tagName !== "INPUT") {
+                        // 避免在输入框中按空格触发
+                        e.preventDefault(); // 阻止页面滚动
+                        this.audioPlayer.play();
+                    }
+                }
             }
         });
+
         // 窗口控制按钮
         document.getElementById("minimize").addEventListener("click", () => {
             this.appWindow.minimize();
         });
 
-        document.getElementById("maximize").addEventListener("click", () => {
-            this.appWindow.toggleMaximize();
+        document.getElementById("maximize").addEventListener("click", async () =>  {
+            await this.appWindow.toggleMaximize();
         });
 
         document.getElementById("close").addEventListener("click", () => {
             this.appWindow.hide();
         });
 
-        ipcRenderer.on("window-state-changed", (event, maximized) => {
-            this.isMaximized = maximized;
-            if (this.isMaximized) {
+        window.addEventListener("resize", async () => {
+            if (await this.appWindow.isFullscreen()) {
                 this.minimizeBtn.innerHTML = `<svg version="1.1" width="12" height="12" viewBox="0,0,37.65105,35.84556" style="margin-top:1px;"><g transform="translate(-221.17804,-161.33903)"><g style="stroke:var(--text);" data-paper-data="{&quot;isPaintingLayer&quot;:true}" fill="none" fill-rule="nonzero" stroke-width="2" stroke-linecap="butt" stroke-linejoin="miter" stroke-miterlimit="10" stroke-dasharray="" stroke-dashoffset="0"><path d="M224.68734,195.6846c-2.07955,-2.10903 -2.00902,-6.3576 -2.00902,-6.3576l0,-13.72831c0,0 -0.23986,-1.64534 2.00902,-4.69202c1.97975,-2.68208 4.91067,-2.00902 4.91067,-2.00902h14.06315c0,0 3.77086,-0.23314 5.80411,1.67418c2.03325,1.90732 1.33935,5.02685 1.33935,5.02685v13.39347c0,0 0.74377,4.01543 -1.33935,6.3576c-2.08312,2.34217 -5.80411,1.67418 -5.80411,1.67418h-13.39347c0,0 -3.50079,0.76968 -5.58035,-1.33935z"></path><path d="M229.7952,162.85325h16.06111c0,0 5.96092,-0.36854 9.17505,2.64653c3.21412,3.01506 2.11723,7.94638 2.11723,7.94638v18.55642"></path></g></g></svg>`;
             } else {
                 this.minimizeBtn.innerHTML = '<i class="bi bi-app"></i>';
@@ -664,21 +691,21 @@ export default class UIManager {
         });
 
         // 监听窗口最小化/恢复事件
-        ipcRenderer.on("window-minimized", () => {
-            // 通知歌词播放器窗口已最小化
-            if (this.audioPlayer && this.audioPlayer.lyricsPlayer) {
-                // 确保最小化时同步一次当前歌词
-                this.audioPlayer.lyricsPlayer.syncDesktopLyrics();
-            }
-        });
-
-        ipcRenderer.on("window-restored", () => {
-            // 通知歌词播放器窗口已恢复
-            if (this.audioPlayer && this.audioPlayer.lyricsPlayer) {
-                // 恢复时同步一次当前歌词
-                this.audioPlayer.lyricsPlayer.syncDesktopLyrics();
-            }
-        });
+        // ipcRenderer.on("window-minimized", () => {
+        //     // 通知歌词播放器窗口已最小化
+        //     if (this.audioPlayer && this.audioPlayer.lyricsPlayer) {
+        //         // 确保最小化时同步一次当前歌词
+        //         this.audioPlayer.lyricsPlayer.syncDesktopLyrics();
+        //     }
+        // });
+        //
+        // ipcRenderer.on("window-restored", () => {
+        //     // 通知歌词播放器窗口已恢复
+        //     if (this.audioPlayer && this.audioPlayer.lyricsPlayer) {
+        //         // 恢复时同步一次当前歌词
+        //         this.audioPlayer.lyricsPlayer.syncDesktopLyrics();
+        //     }
+        // });
     }
 
     async handleSearch() {
@@ -1080,7 +1107,8 @@ export default class UIManager {
     /**
      * 初始化托盘控制相关功能
      */
-    initializeTrayControls() {
+    initializeTray() {
+
         // 监听来自托盘的控制命令
         ipcRenderer.on("tray-control", (_, command) => {
             switch (command) {

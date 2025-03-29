@@ -471,7 +471,7 @@ export default class SettingManager {
     }
 
     setAppVersion() {
-        // 从package.json获取版本号
+        // 从tauri.conf.json获取版本号
         const versionElement = document.getElementById("app-version");
         if (versionElement) {
             getVersion().then((version) => {
