@@ -31,6 +31,7 @@ class UIManager {
         this.initializeCustomSelects();
         this.initializeWelcomeDialog();
         this.initializeTrayControls(); // 新增托盘控制初始化
+        this.autoMaximize();
     }
     initializeSearchSuggestions() {
         const searchInput = document.querySelector(".search input");
@@ -395,7 +396,7 @@ class UIManager {
             const action = button.dataset.action;
             switch (action) {
                 case "play":
-                    this.audioPlayer.play();
+                    // this.audioPlayer.play();
                     break;
                 case "prev":
                     this.audioPlayer.prev();
@@ -1096,7 +1097,7 @@ class UIManager {
         ipcRenderer.on("tray-control", (_, command) => {
             switch (command) {
                 case "play-pause":
-                    this.audioPlayer.play();
+                    // this.audioPlayer.play();
                     break;
                 case "next":
                     this.audioPlayer.next();
@@ -1186,6 +1187,14 @@ class UIManager {
             }
         } catch (error) {
             console.error("更新托盘信息失败:", error);
+        }
+    }
+
+    autoMaximize() {
+        if (this.settingManager.getSetting("autoMaximize") === "true") {
+            ipcRenderer.send("window-maximize", "maximize");
+        } else {
+            ipcRenderer.send("window-maximize", "unmaximize");
         }
     }
 }
