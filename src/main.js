@@ -505,9 +505,9 @@ function createWindow() {
                 } else if (request.url === '/background.png') {
                     response.writeHead(200, { 'Content-Type': 'image/png' });
                     response.end(fs.readFileSync(path.join(__dirname, '..', 'img', 'NB_Music.png')));
-                } else if (request.url === '/HarmonyOS_Sans.woff') {
-                    response.writeHead(200, { 'Content-Type': 'font/woff' });
-                    response.end(fs.readFileSync(path.join(__dirname, '..', 'fonts', 'HarmonyOS_Sans_Medium.woff')));
+                } else if (request.url === '/HarmonyOS_Sans.woff2') {
+                    response.writeHead(200, { 'Content-Type': 'font/woff2' });
+                    response.end(fs.readFileSync(path.join(__dirname, '..', 'fonts', 'HarmonyOS_Sans_Medium.woff2')));
                 } else if (request.url === '/getUserInfo') {
                     axios.get('https://api.bilibili.com/x/web-interface/nav', {
                         headers: {
