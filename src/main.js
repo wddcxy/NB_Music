@@ -102,7 +102,8 @@ async function getBilibiliCookies(skipLocalCookies = false) {
         });
         const page = await browser.newPage();
         await page.goto("https://www.bilibili.com");
-        const cookies = await page.cookies();
+        const context = browser.defaultBrowserContext();
+        const cookies = await context.cookies("https://www.bilibili.com");
         const cookieString = formatCookieString(cookies);
         saveCookies(cookieString);
         await browser.close();
