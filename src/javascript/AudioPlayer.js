@@ -286,24 +286,30 @@ class AudioPlayer {
         this.audio.volume = currentVolume;
     
         let nextIndex;
-        if (this.playlistManager.playMode === 'shuffle') {
-            // 随机播放
-            nextIndex = Math.floor(Math.random() * this.playlistManager.playlist.length);
-            while(nextIndex === this.playlistManager.playingNow && this.playlistManager.playlist.length > 1) {
+        switch (this.playlistManager.playMode) {
+            case 'shuffle': {
+                // 随机播放
                 nextIndex = Math.floor(Math.random() * this.playlistManager.playlist.length);
+                while (nextIndex === this.playlistManager.playingNow && this.playlistManager.playlist.length > 1) {
+                    nextIndex = Math.floor(Math.random() * this.playlistManager.playlist.length);
+                }
+                break;
             }
-        } else {
-            // 列表循环和单曲循环模式下都使用相同的下一首逻辑
-            nextIndex = this.playlistManager.playingNow < this.playlistManager.playlist.length - 1 ? 
-                this.playlistManager.playingNow + 1 : 
-                0;
+            case 'repeat': {
+                // 列表循环模式下使用下一首逻辑
+                nextIndex = this.playlistManager.playingNow < this.playlistManager.playlist.length - 1 ?
+                    this.playlistManager.playingNow + 1 :
+                    0;
+                break;
+            }
+            default: {
+                nextIndex = this.playlistManager.playingNow;
+            }
         }
-        
         this.playlistManager.setPlayingNow(nextIndex);
     }
 
     // 设置 settingManager 的方法
-
     setSettingManager(settingManager) {
         this.settingManager = settingManager;
         // 当settingManager被设置时，立即更新音量
