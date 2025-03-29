@@ -427,7 +427,7 @@ class PlaylistManager {
                         if (response.status === 403) {
                             throw new Error('访问被拒绝');
                         }
-                    } catch (error) {
+                    } catch {
                         console.warn('主音频URL不可用，尝试备用URL');
                         const urls = await this.musicSearcher.getAudioLink(song.bvid, true);
                         currentUrl = urls.length > 1 ? urls[1] : urls[0];

@@ -339,13 +339,13 @@ class UIManager {
             }
         });
         
-        this.settingManager.addListener("desktopLyricsFontSize", (newValue) => {
+        this.settingManager.addListener("desktopLyricsFontSize", () => {
             if (this.lyricsPlayer && this.lyricsPlayer.desktopLyricsEnabled) {
                 this.lyricsPlayer.updateDesktopLyricsStyle();
             }
         });
         
-        this.settingManager.addListener("desktopLyricsOpacity", (newValue) => {
+        this.settingManager.addListener("desktopLyricsOpacity", () => {
             if (this.lyricsPlayer && this.lyricsPlayer.desktopLyricsEnabled) {
                 this.lyricsPlayer.updateDesktopLyricsStyle();
             }

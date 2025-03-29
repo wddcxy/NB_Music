@@ -1,5 +1,5 @@
 "use strict";
-const { ipcRenderer, shell } = require("electron");
+const { ipcRenderer } = require("electron");
 const AudioPlayer = require("./javascript/AudioPlayer.js");
 const LyricsPlayer = require("./javascript/LyricsPlayer.js");
 const UIManager = require("./javascript/UIManager.js");

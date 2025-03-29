@@ -240,8 +240,6 @@
   position: relative;
   overflow: hidden;
 }
-  overflow: hidden;
-}
 
 .flash::after {
   content: '';

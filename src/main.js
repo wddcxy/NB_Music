@@ -469,18 +469,18 @@ function createWindow() {
         }
     });
 
-    ipcMain.on('get-cookies', async (event) => {
+    ipcMain.on('get-cookies', async () => {
         win.webContents.send('get-cookies-success', loadCookies());
     });
 
-    ipcMain.on('logout', async (event) => {
+    ipcMain.on('logout', async () => {
         storage.delete("cookies");
         win.webContents.send('logout-success');
 
         setBilibiliRequestCookie("");
     });
 
-    ipcMain.on('start-browser-auth-server', async (event) => {
+    ipcMain.on('start-browser-auth-server', async () => {
         if (browserAuthServer === null) {
             browserAuthServer = https.createServer({
                 key: fs.readFileSync(path.join(__dirname, '..', 'ssl', 'privkey.pem')), // 私钥
@@ -565,7 +565,7 @@ function createWindow() {
         }
     });
 
-    ipcMain.on('close-browser-auth-server', async (event) => {
+    ipcMain.on('close-browser-auth-server', async () => {
         if (browserAuthServer !== null) {
             browserAuthServer.close();
             browserAuthServer = null;
@@ -679,7 +679,7 @@ function setupIPC() {
     });
 
     // 处理播放控制
-    ipcMain.on('desktop-lyrics-toggle-play', (event) => {
+    ipcMain.on('desktop-lyrics-toggle-play', () => {
         if (global.mainWindow) {
             global.mainWindow.webContents.send('desktop-lyrics-control', 'toggle-play');
         }
@@ -707,7 +707,7 @@ function setupIPC() {
     });
 
     // 处理背景颜色选择
-    ipcMain.on('desktop-lyrics-bg-color', (event) => {
+    ipcMain.on('desktop-lyrics-bg-color', () => {
         if (global.mainWindow) {
             global.mainWindow.webContents.send('show-lyrics-bg-color-picker');
         }
@@ -754,7 +754,7 @@ function setupIPC() {
     });
 
     // 强制同步歌词 - 这个新增的IPC处理器可以确保在主窗口状态变化时仍能同步歌词
-    ipcMain.on('force-sync-desktop-lyrics', (event) => {
+    ipcMain.on('force-sync-desktop-lyrics', () => {
         if (global.mainWindow && desktopLyricsWindow) {
             global.mainWindow.webContents.send('request-lyrics-sync');
         }
