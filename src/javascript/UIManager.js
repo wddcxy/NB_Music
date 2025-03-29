@@ -1129,6 +1129,7 @@ class UIManager {
             if (agreeButton) agreeButton.disabled = true;
         }
     }
+
     /**
      * 初始化托盘控制相关功能
      */
