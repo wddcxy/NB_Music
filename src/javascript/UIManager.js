@@ -1,12 +1,12 @@
-const { ipcRenderer } = require("electron");
-const { extractMusicTitle } = require("../utils.js");
+import { extractMusicTitle } from "../utils.js";
 
-class UIManager {
-    constructor(settingManager, audioPlayer, playlistManager, favoriteManager, musicSearcher) {
+export default class UIManager {
+    constructor(settingManager, audioPlayer, playlistManager, favoriteManager, musicSearcher, appWindow) {
         this.audioPlayer = audioPlayer;
         this.playlistManager = playlistManager;
         this.favoriteManager = favoriteManager;
         this.musicSearcher = musicSearcher;
+        this.appWindow = appWindow;
         this.selectedSuggestionIndex = -1;
         this.isMaximized = false;
         this.settingManager = settingManager;
@@ -480,15 +480,15 @@ class UIManager {
         });
         // 窗口控制按钮
         document.getElementById("minimize").addEventListener("click", () => {
-            ipcRenderer.send("window-minimize");
+            this.appWindow.minimize();
         });
 
         document.getElementById("maximize").addEventListener("click", () => {
-            ipcRenderer.send("window-maximize");
+            this.appWindow.toggleMaximize();
         });
 
         document.getElementById("close").addEventListener("click", () => {
-            ipcRenderer.send("window-close");
+            this.appWindow.hide();
         });
 
         ipcRenderer.on("window-state-changed", (event, maximized) => {
@@ -1178,5 +1178,3 @@ class UIManager {
         }
     }
 }
-
-module.exports = UIManager;

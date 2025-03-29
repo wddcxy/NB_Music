@@ -1,0 +1,38 @@
+{
+  "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
+  "productName": "nb_music",
+  "version": "1.0.1-Beta",
+  "identifier": "com.nb-group.nb-music",
+  "build": {
+    "frontendDist": "../src/dist",
+    "devUrl": "http://localhost:5858",
+    "beforeDevCommand": "yarn vite_dev",
+    "beforeBuildCommand": "yarn vite_build"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "Nb Music",
+        "width": 800,
+        "height": 600,
+        "resizable": true,
+        "fullscreen": false,
+        "decorations": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/32x32.png",
+      "icons/128x128.png",
+      "icons/128x128@2x.png",
+      "icons/icon.icns",
+      "icons/icon.ico"
+    ]
+  }
+}

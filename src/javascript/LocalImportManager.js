@@ -2,7 +2,7 @@
  * 本地文件导入管理器
  * 处理本地音频、视频和图片的导入
  */
-class LocalImportManager {
+export default class LocalImportManager {
     constructor(playlistManager, uiManager) {
         this.playlistManager = playlistManager;
         this.uiManager = uiManager;
@@ -649,5 +649,3 @@ class LocalImportManager {
         if (artistInput) artistInput.value = '';
     }
 }
-
-module.exports = LocalImportManager;

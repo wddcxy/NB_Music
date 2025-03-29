@@ -1,4 +1,4 @@
-class EffectManager {
+export default class EffectManager {
     constructor(audioPlayer, settingManager) {
         this.audioPlayer = audioPlayer;
         this.settingManager = settingManager;
@@ -40,5 +40,3 @@ class EffectManager {
         draw();
     }
 }
-
-module.exports = EffectManager;

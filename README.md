@@ -54,7 +54,7 @@
 ```bash
 ├──  icons/                       # 项目图标资源
 ├──  img/                         # 项目图像资源
-├──  public/                      # 公共资源文件夹
+├──  assets/                      # 公共资源文件夹
 ├──  src/                         # 源代码文件夹
 │   ├──  javascript/              # JavaScript文件
 │   │   ├──  AudioPlayer.js       # 音频播放器功能
@@ -68,7 +68,7 @@
 │   │   ├──  SettingManager.js    # 设置管理器
 │   │   ├──  UIManager.js         # UI管理器
 │   │   ├──  UpdateManager.js     # 更新管理器
-│   ├──  main.html                # 主要HTML文件
+│   ├──  index.html                # 主要HTML文件
 │   ├──  main.js                # 主要JavaScript文件
 │   ├──  mobile.js                # 手机适配js文件
 │   ├──  script.js                # 辅助脚本

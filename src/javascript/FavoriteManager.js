@@ -1,6 +1,6 @@
-const { createObservableArray } = require("../utils.js");
+import { createObservableArray } from "../utils.js";
 
-class FavoriteManager {
+export default class FavoriteManager {
     constructor(playlistManager, uiManager) {
         this.playlistManager = playlistManager;
         this.uiManager = uiManager;
@@ -129,5 +129,3 @@ class FavoriteManager {
         });
     }
 }
-
-module.exports = FavoriteManager;

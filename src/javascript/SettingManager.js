@@ -1,6 +1,6 @@
-const { ipcRenderer, shell } = require("electron");
+import { getVersion } from "@tauri-apps/api/app";
 
-class SettingManager {
+export default class SettingManager {
     // 默认值常量
     static DEFAULT_PRIMARY_COLOR = "#ad6eca";
     static DEFAULT_SECONDARY_COLOR = "#3b91d8";
@@ -474,7 +474,7 @@ class SettingManager {
         // 从package.json获取版本号
         const versionElement = document.getElementById("app-version");
         if (versionElement) {
-            ipcRenderer.invoke("get-app-version").then((version) => {
+            getVersion().then((version) => {
                 versionElement.textContent = version || "1.0.0";
             });
         }
@@ -497,5 +497,3 @@ class SettingManager {
         return qualityMap[quality] || "未知";
     }
 }
-
-module.exports = SettingManager;

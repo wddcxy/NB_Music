@@ -346,7 +346,7 @@ function createWindow() {
     win.webContents.setBackgroundThrottling(false);
 
     setupAutoUpdater(win);
-    win.loadFile("src/main.html");
+    win.loadFile("src/index.html");
     win.maximize();
 
     if (!app.isPackaged) {

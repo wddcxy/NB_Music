@@ -2,7 +2,7 @@
  * 视频播放器管理器
  * 负责处理视频播放对话框和播放控制
  */
-class VideoPlayerManager {
+export default class VideoPlayerManager {
     constructor(playlistManager, uiManager) {
         this.playlistManager = playlistManager;
         this.uiManager = uiManager;
@@ -826,5 +826,3 @@ class VideoPlayerManager {
         }
     }
 }
-
-module.exports = VideoPlayerManager;

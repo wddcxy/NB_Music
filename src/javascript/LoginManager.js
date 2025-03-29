@@ -1,13 +1,12 @@
-const QRCode = require('qrcode');
-const axios = require('axios');
-const { ipcRenderer } = require('electron');
-const md5 = require('md5');
-const { spawn, exec } = require("child_process");
-const path = require("path");
-const fs = require("fs");
-const open = require("open");
+import "qrcode";
+import "axios";
+import "md5";
+import "path";
+import "child_process";
+import "fs";
+// import "open";
 
-class LoginManager {
+export default class LoginManager {
     constructor(uiManager) {
         this.qrcodeKey = null;
         this.pollTimer = null;
@@ -153,7 +152,7 @@ class LoginManager {
 
     bindEvents() {
         const loginBtn = document.querySelector('.login-btn');
-        const loginDialog = document.getElementById('loginDialog');
+
         const refreshBtn = document.getElementById('refreshQRCode');
         const reOpenBrowserBtn = document.getElementById('reOpenBrowser');
         const cancelBtn = document.getElementById('cancelLogin');
@@ -233,16 +232,16 @@ class LoginManager {
     
                 switch (data.data.code) {
                     case 0: // 登录成功
-                        statusElem.textContent = '登录成功，正在设置...';
+                        { statusElem.textContent = '登录成功，正在设置...';
                         this.clearPolling();
-                        
+
                         // 获取所有的cookie
                         const rawCookies = data.data.url.match(/[^?]*\?(.*)/)[1].split('&');
                         const cookies = rawCookies.map(pair => {
                             const [name, value] = pair.split('=');
                             return `${name}=${value}`;
                         });
-    
+
                         // 发送给主进程设置
                         ipcRenderer.send('login-success', { cookies });
 
@@ -252,7 +251,7 @@ class LoginManager {
                             console.error('登录失败:', error);
                             setTimeout(() => this.hideLoginDialog(), 2000);
                         });
-                        break;
+                        break; }
     
                     case 86038: // 二维码已过期
                         statusElem.textContent = '二维码已过期，请点击刷新';
@@ -581,5 +580,3 @@ class LoginManager {
         ipcRenderer.send('start-browser-auth-server');
     }
 }
-
-module.exports = LoginManager;

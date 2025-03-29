@@ -1,4 +1,4 @@
-function createObservableArray(callback) {
+export function createObservableArray(callback) {
     return new Proxy([], {
         set(target, property, value) {
             const oldValue = target[property];
@@ -32,7 +32,7 @@ function createObservableArray(callback) {
     });
 }
 
-async function cropImageToSquare(imageUrl) {
+export async function cropImageToSquare(imageUrl) {
     return new Promise((resolve, reject) => {
         const img = new Image();
         img.crossOrigin = "anonymous"; // 处理跨域图片
@@ -66,7 +66,7 @@ async function cropImageToSquare(imageUrl) {
     });
 }
 
-function extractMusicTitle(input) {
+export function extractMusicTitle(input) {
     if (!input || typeof input !== 'string') {
         return '';
     }
@@ -87,7 +87,7 @@ function extractMusicTitle(input) {
 
     return matches.filter(item => item && item.trim()).join(' ');
 }
-async function getImageDimensions(imageUrl) {
+export async function getImageDimensions(imageUrl) {
     return new Promise((resolve, reject) => {
         const img = new Image();
         img.onload = () => {
@@ -99,10 +99,3 @@ async function getImageDimensions(imageUrl) {
         img.src = imageUrl;
     });
 }
-
-module.exports = {
-    createObservableArray,
-    cropImageToSquare,
-    extractMusicTitle,
-    getImageDimensions
-};

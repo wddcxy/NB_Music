@@ -1,6 +1,6 @@
 @font-face {
   font-family: 'HarmonyOS_Sans';
-  src: url('../../fonts/HarmonyOS_Sans_Medium.woff') format('woff')
+  src: url('../assets/fonts/HarmonyOS_Sans_Medium.woff') format('woff')
 }
 
 :root {

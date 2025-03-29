@@ -1,5 +1,5 @@
 // 音频播放器类
-class AudioPlayer {
+export default class AudioPlayer {
     constructor(playlistManager) {
         this.playlistManager = playlistManager;
         this.audio = new Audio();
@@ -320,5 +320,3 @@ class AudioPlayer {
         this.audio.volume = 1;
     }
 }
-
-module.exports = AudioPlayer;

@@ -1,4 +1,4 @@
-class CacheManager {
+export default class CacheManager {
     constructor() {
         this.cachePrefix = "nbmusic_cache_";
     }
@@ -29,5 +29,3 @@ class CacheManager {
         });
     }
 }
-
-module.exports = CacheManager;

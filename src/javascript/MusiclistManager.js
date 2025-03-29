@@ -1,5 +1,5 @@
-const axios = require('axios');
-class MusiclistManager {
+import "axios";
+export default class MusiclistManager {
     constructor(playlistManager) {
         this.playlistManager = playlistManager;
         this.playlists = [];
@@ -1053,5 +1053,3 @@ class MusiclistManager {
         return songsWithLyrics;
     }
 }
-
-module.exports = MusiclistManager;

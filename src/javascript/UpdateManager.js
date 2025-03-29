@@ -1,6 +1,5 @@
-const { ipcRenderer } = require('electron');
 
-class UpdateManager {
+export default class UpdateManager {
     constructor() {
         this.container = document.getElementById('update-container');
         this.status = document.getElementById('update-status');
@@ -97,5 +96,3 @@ class UpdateManager {
         this.status.className = `update-status ${type}`;
     }
 }
-
-module.exports = UpdateManager;

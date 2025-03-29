@@ -2,8 +2,10 @@
 node_modules/
 
 # 忽略打包生成的文件
-build/
 dist/
+src-tauri/target/
+src-tauri/icons/
+src-tauri/gen/
 
 # 忽略日志文件
 *.log

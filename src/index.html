@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html lang="zh-cn" class="dark"
-  style="--bgul: url(../img/NB_Music.png); --theme-1-rgb: 106, 17, 203; --theme-2-rgb: 37, 117, 252; --bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275)">
+  style="--bgul: url(assets/img/NB_Music.png); --theme-1-rgb: 106, 17, 203; --theme-2-rgb: 37, 117, 252; --bounce: cubic-bezier(0.175, 0.885, 0.32, 1.275)">
 
 <head>
   <meta charset="UTF-8" />
@@ -11,9 +11,9 @@
 </head>
 
 <body>
-  <div class="titbar" style="filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 1))">
+  <div class="titbar" style="filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 1))" data-tauri-drag-region>
     <div style="display: flex">
-      <img src="../icons/NB Music.png" class="icon" />
+      <img src="assets/icons/NB Music.png" class="icon" />
       <p>NB Music</p>
     </div>
 
@@ -33,7 +33,7 @@
   <div class="loading" style="display: none">
     <div class="mica" style="align-items: center">
       <div class="cover">
-        <img class="cover-img" src="../img/NB_Music.png" alt="cover" />
+        <img class="cover-img" src="assets/img/NB_Music.png" alt="cover" />
       </div>
     </div>
   </div>
@@ -109,7 +109,7 @@
     <div class="dialog">
       <div class="dialog-header">
         <div class="dialog-header-content">
-          <img src="../icons/NB Music.png" alt="NB Music Logo" class="welcome-icon" />
+          <img src="assets/icons/NB Music.png" alt="NB Music Logo" class="welcome-icon" />
           <h2>欢迎使用 NB Music</h2>
           <p class="welcome-subtitle">一款由热爱音乐的初中生开发的跨平台音乐播放器</p>
         </div>
@@ -336,7 +336,7 @@
       <div class="player">
         <div class="player-content">
           <div class="cover">
-            <img class="cover-img" src="../img/NB_Music.png" alt="cover" />
+            <img class="cover-img" src="assets/img/NB_Music.png" alt="cover" />
           </div>
           <div class="info">
             <div class="title">歌曲名</div>
@@ -427,7 +427,7 @@
         <div class="title">搜索结果</div>
         <list class="search list">
           <div class="song">
-            <img class="poster" alt="Poster image" src="../img/NB_Music.png" />
+            <img class="poster" alt="Poster image" src="assets/img/NB_Music.png" />
             <div class="info">
               <div class="name">NB</div>
               <div class="artist">NB</div>
@@ -457,7 +457,7 @@
             </div>
             <div class="about-card">
               <div class="about-header">
-                <img src="../icons/NB Music.png" alt="NB Music Logo" class="app-logo" />
+                <img src="assets/icons/NB Music.png" alt="NB Music Logo" class="app-logo" />
                 <div class="app-info">
                   <div class="app-name">NB Music</div>
                   <div class="app-version">版本 <span id="app-version">1.0.0</span> <span class="version-badge">开源</span>
@@ -829,7 +829,7 @@
   </div>
 
 </body>
-<script src="./script.js"></script>
-<script src="./mobile.js"></script>
+<script src="./script.js" type="module"></script>
+<!--<script src="./mobile.js"></script>-->
 
 </html>

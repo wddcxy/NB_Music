@@ -1,19 +1,20 @@
 "use strict";
-const { ipcRenderer } = require("electron");
-const AudioPlayer = require("./javascript/AudioPlayer.js");
-const LyricsPlayer = require("./javascript/LyricsPlayer.js");
-const UIManager = require("./javascript/UIManager.js");
-const PlaylistManager = require("./javascript/PlaylistManager.js");
-const FavoriteManager = require("./javascript/FavoriteManager.js");
-const MusicSearcher = require("./javascript/MusicSearcher.js");
-const SettingManager = require("./javascript/SettingManager.js");
-const MusiclistManager = require("./javascript/MusiclistManager.js");
-const CacheManager = require("./javascript/CacheManager.js");
-const LoginManager = require("./javascript/LoginManager.js");
-const UpdateManager = require("./javascript/UpdateManager.js");
-const LocalImportManager = require("./javascript/LocalImportManager");
-const VideoPlayerManager = require("./javascript/VideoPlayerManager");
-const EffectManager = require("./javascript/EffectManager.js");
+import {Window} from '@tauri-apps/api/window';
+
+import  AudioPlayer  from "./javascript/AudioPlayer.js";
+import LyricsPlayer from "./javascript/LyricsPlayer.js";
+import UIManager  from "./javascript/UIManager.js";
+import PlaylistManager from "./javascript/PlaylistManager.js";
+import FavoriteManager from "./javascript/FavoriteManager.js";
+import MusicSearcher from "./javascript/MusicSearcher.js";
+import SettingManager from "./javascript/SettingManager.js";
+import MusiclistManager from "./javascript/MusiclistManager.js";
+import CacheManager from "./javascript/CacheManager.js";
+import LoginManager from "./javascript/LoginManager.js";
+import UpdateManager from "./javascript/UpdateManager.js";
+import LocalImportManager from "./javascript/LocalImportManager";
+import VideoPlayerManager from "./javascript/VideoPlayerManager";
+import EffectManager from "./javascript/EffectManager.js";
 
 class App {
     constructor() {
@@ -33,6 +34,7 @@ class App {
     initializecomponents() {
         try {
             // 1. 创建基础组件
+            this.appWindow = new Window('main');
             this.settingManager = new SettingManager();
             this.audioPlayer = new AudioPlayer(null); // 暂时传入null
             this.lyricsPlayer = new LyricsPlayer("暂无歌词，尽情欣赏音乐", this.audioPlayer.audio, this.settingManager);
@@ -46,7 +48,8 @@ class App {
                 this.audioPlayer,
                 this.playlistManager, // 已初始化
                 null, // favoriteManager临时为null
-                null // musicSearcher临时为null
+                null, // musicSearcher临时为null
+                this.appWindow
             );
 
             // 4. 创建其他依赖UI管理器的组件
@@ -262,6 +265,7 @@ class App {
             document.getElementById("update-actions").classList.remove("hide");
         });
 
+        // eslint-disable-next-line no-undef
         ipcRenderer.on("update-not-available", () => {
             document.getElementById("update-status").textContent = "当前已是最新版本";
             setTimeout(() => {
@@ -269,6 +273,7 @@ class App {
             }, 2000);
         });
 
+        // eslint-disable-next-line no-undef
         ipcRenderer.on("update-error", (event, error) => {
             document.getElementById("update-status").textContent = `更新检查失败: ${error}`;
             setTimeout(() => {
