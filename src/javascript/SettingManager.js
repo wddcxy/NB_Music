@@ -27,7 +27,9 @@ class SettingManager {
             hideSidebar: false,
             hideTitbar: false,
             devToolsEnabled: false, // 新增：开发者工具设置，默认禁用
-            autoMaximize: false
+            autoMaximize: false,
+            lyricSource: "netease", // 新增：歌词来源，默认使用网易云
+            volume: SettingManager.DEFAULT_VOLUME // 已存在的音量设置
         };
         this.listeners = new Map();
         this.STORAGE_KEY = "app_settings";

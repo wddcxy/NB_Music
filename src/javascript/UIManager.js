@@ -351,6 +351,47 @@ class UIManager {
             }
         });
 
+        // 监听歌词来源设置变更
+        this.settingManager.addListener("lyricSource", async (newValue) => {
+            // 如果有当前播放的歌曲，则重新获取歌词并更新显示
+            if (this.audioPlayer && this.audioPlayer.lyricsPlayer && this.playlistManager) {
+                const currentSong = this.playlistManager.playlist[this.playlistManager.playingNow];
+                if (currentSong) {
+                    try {
+                        // 显示加载状态
+                        const progressBar = document.querySelector(".progress-bar-inner");
+                        progressBar.classList.add('loading');
+                        
+                        // 根据新的歌词来源重新获取歌词
+                        const newLyrics = await this.musicSearcher.getLyrics(
+                            currentSong.title, 
+                            currentSong.bvid, 
+                            currentSong.cid, 
+                            newValue
+                        );
+                        
+                        // 更新歌词显示
+                        if (this.audioPlayer.lyricsPlayer) {
+                            this.audioPlayer.lyricsPlayer.changeLyrics(newLyrics);
+                        }
+                        
+                        // 隐藏加载状态
+                        progressBar.classList.remove('loading');
+                        
+                        // 显示通知
+                        this.showNotification(`歌词来源已切换为${newValue === 'netease' ? '网易云歌词' : 'B站字幕'}`, "success");
+                    } catch (error) {
+                        console.error("切换歌词来源失败:", error);
+                        this.showNotification("切换歌词来源失败，请重试", "error");
+                        
+                        // 隐藏加载状态
+                        const progressBar = document.querySelector(".progress-bar-inner");
+                        progressBar.classList.remove('loading');
+                    }
+                }
+            }
+        });
+
         const settingContainer = document.querySelector(".content>.setting");
         settingContainer.addEventListener("click", (e) => {
             const setting = e.target;
