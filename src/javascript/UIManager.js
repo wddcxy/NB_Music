@@ -437,7 +437,7 @@ class UIManager {
             const action = button.dataset.action;
             switch (action) {
                 case "play":
-                    // this.audioPlayer.play();
+                    this.audioPlayer.play();
                     break;
                 case "prev":
                     this.audioPlayer.prev();
@@ -1138,7 +1138,7 @@ class UIManager {
         ipcRenderer.on("tray-control", (_, command) => {
             switch (command) {
                 case "play-pause":
-                    // this.audioPlayer.play();
+                    this.audioPlayer.play();
                     break;
                 case "next":
                     this.audioPlayer.next();
