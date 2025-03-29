@@ -528,13 +528,13 @@ class UIManager {
 
         // 侧边栏点击事件
         document.addEventListener("dblclick", (event) => {
-            if (!event.target.closest(".sidebar") && !event.target.closest(".dock.sidebar") && this.settingManager.getSetting("hideSidebar") == "true") {
+            if (!event.target.closest(".sidebar") && !event.target.closest(".dock.sidebar") && this.settingManager.getSetting("hideSidebar") === "true") {
                 document.querySelector(".sidebar").style.transition = "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.04, 0.92, 0.4, 0.97)";
                 document.querySelector(".sidebar").parentElement.style.gridTemplateColumns = "0 auto";
                 document.querySelector(".sidebar").style.opacity = "0";
                 // document.querySelector(".sidebar").style.display = "none";
             }
-            if (!event.target.closest(".titbar") && this.settingManager.getSetting("hideTitbar") == "true") {
+            if (!event.target.closest(".titbar") && this.settingManager.getSetting("hideTitbar") === "true") {
                 document.querySelectorAll(".titbar .fadein").forEach((fadeItem) => {
                     fadeItem.classList.add("fadeout");
                 });
