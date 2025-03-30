@@ -265,7 +265,7 @@ class MusiclistManager {
                     const importType = e.target.getAttribute('data-value');
 
                     updateImportTypeUI(importType);
-                    this.cleanfavGroup();
+                    this.cleanFavGroup();
                     loadFav(importType);
                 } else if (e.target.closest('#favSelect')) {
                     if (getCustomSelectValue('favSelect') === 'inputLink') {
@@ -309,7 +309,7 @@ class MusiclistManager {
 
         cancelBtn.addEventListener("click", () => {
             importDialog.classList.add("hide");
-            this.cleanfavGroup();
+            this.cleanFavGroup();
             favLinkInput.value = '';
         });
 
@@ -345,7 +345,7 @@ class MusiclistManager {
                 if (result.success) {
                     this.uiManager.showNotification(result.message, 'success');
                     importDialog.classList.add('hide');
-                    this.cleanfavGroup();
+                    this.cleanFavGroup();
                     favLinkInput.value = '';
                     this.renderPlaylistList();
                 } else {
@@ -363,13 +363,13 @@ class MusiclistManager {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && !importDialog.classList.contains('hide')) {
                 importDialog.classList.add('hide');
-                this.cleanfavGroup();
+                this.cleanFavGroup();
                 favLinkInput.value = '';
             }
         });
     }
 
-    cleanfavGroup() {
+    cleanFavGroup() {
         Array.from(this.favGroup.children).forEach(child => {
             if (child.id === 'favSelect') {
                 child.remove();
