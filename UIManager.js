@@ -31,7 +31,6 @@ class UIManager {
         this.initializeCustomSelects();
         this.initializeWelcomeDialog();
         this.initializeTrayControls(); // 新增托盘控制初始化
-        this.autoMaximize();
     }
     initializeSearchSuggestions() {
         const searchInput = document.querySelector(".search input");
@@ -268,57 +267,17 @@ class UIManager {
     initializeSettings() {
         // 监听歌词显示设置变更
         this.settingManager.addListener("lyricsEnabled", (newValue) => {
-            if (this.audioPlayer && this.audioPlayer.lyricsPlayer) {
-                this.audioPlayer.lyricsPlayer.setVisibility(newValue === "true");
-            }
-            
-            const lyricsContainer = document.getElementById("lyrics-container");
-            if (lyricsContainer) {
-                if (newValue === "true") {
-                    lyricsContainer.style.display = "block";
-                    
-                    // 延迟一点时间，确保DOM更新后再刷新布局
-                    setTimeout(() => {
-                        if (this.audioPlayer && this.audioPlayer.lyricsPlayer) {
-                            this.audioPlayer.lyricsPlayer.refreshLayout();
-                        }
-                    }, 100);
-                } else {
-                    lyricsContainer.style.display = "none";
-                }
+            if (this.lyricsPlayer) {
+                this.lyricsPlayer.setVisibility(newValue === "true");
             }
         });
-        
-        // 监听循环歌词同步设置变更
-        this.settingManager.addListener("loopLyricsEnabled", () => {
-            // 如果有活跃的歌词播放器，尝试重新检测循环
-            if (this.audioPlayer && this.audioPlayer.lyricsPlayer) {
-                // 清除现有检测状态
-                this.audioPlayer.lyricsPlayer.isLoopDetected = false;
-                this.audioPlayer.lyricsPlayer.originalSongDuration = null;
-                
-                // 重新检测
-                setTimeout(() => {
-                    this.audioPlayer.lyricsPlayer.detectLoopSong();
-                }, 500);
-            }
-        });
-        
-        // 应用默认设置
-        const lyricsEnabled = this.settingManager.getSetting("lyricsEnabled");
-        if (lyricsEnabled === "true" || lyricsEnabled === true) {
-            if (document.getElementById("lyrics-container")) {
-                document.getElementById("lyrics-container").style.display = "block";
-            }
-        } else {
-            if (document.getElementById("lyrics-container")) {
-                document.getElementById("lyrics-container").style.display = "none";
-            }
-        }
-
         // 主题切换事件
-        this.settingManager.addListener("theme", (newValue) => {
-            document.documentElement.setAttribute("data-theme", newValue);
+        this.settingManager.addListener("theme", (newValue, oldValue) => {
+            if (newValue == "auto") {
+                newValue = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+            }
+            document.querySelector("html").classList.remove(oldValue);
+            document.querySelector("html").classList.add(newValue);
         });
 
         // 背景切换事件
@@ -379,56 +338,15 @@ class UIManager {
             }
         });
         
-        this.settingManager.addListener("desktopLyricsFontSize", () => {
+        this.settingManager.addListener("desktopLyricsFontSize", (newValue) => {
             if (this.lyricsPlayer && this.lyricsPlayer.desktopLyricsEnabled) {
                 this.lyricsPlayer.updateDesktopLyricsStyle();
             }
         });
         
-        this.settingManager.addListener("desktopLyricsOpacity", () => {
+        this.settingManager.addListener("desktopLyricsOpacity", (newValue) => {
             if (this.lyricsPlayer && this.lyricsPlayer.desktopLyricsEnabled) {
                 this.lyricsPlayer.updateDesktopLyricsStyle();
-            }
-        });
-
-        // 监听歌词来源设置变更
-        this.settingManager.addListener("lyricSource", async (newValue) => {
-            // 如果有当前播放的歌曲，则重新获取歌词并更新显示
-            if (this.audioPlayer && this.audioPlayer.lyricsPlayer && this.playlistManager) {
-                const currentSong = this.playlistManager.playlist[this.playlistManager.playingNow];
-                if (currentSong) {
-                    try {
-                        // 显示加载状态
-                        const progressBar = document.querySelector(".progress-bar-inner");
-                        progressBar.classList.add('loading');
-                        
-                        // 根据新的歌词来源重新获取歌词
-                        const newLyrics = await this.musicSearcher.getLyrics(
-                            currentSong.title, 
-                            currentSong.bvid, 
-                            currentSong.cid, 
-                            newValue
-                        );
-                        
-                        // 更新歌词显示
-                        if (this.audioPlayer.lyricsPlayer) {
-                            this.audioPlayer.lyricsPlayer.changeLyrics(newLyrics);
-                        }
-                        
-                        // 隐藏加载状态
-                        progressBar.classList.remove('loading');
-                        
-                        // 显示通知
-                        this.showNotification(`歌词来源已切换为${newValue === 'netease' ? '网易云歌词' : 'B站字幕'}`, "success");
-                    } catch (error) {
-                        console.error("切换歌词来源失败:", error);
-                        this.showNotification("切换歌词来源失败，请重试", "error");
-                        
-                        // 隐藏加载状态
-                        const progressBar = document.querySelector(".progress-bar-inner");
-                        progressBar.classList.remove('loading');
-                    }
-                }
             }
         });
 
@@ -556,10 +474,10 @@ class UIManager {
         window.addEventListener("keydown", (e) => {
             // F12 打开开发者工具
             if (e.key === "F12") {
-                // 检查是否启用了DevTools
-                const devToolsEnabled = this.settingManager.getSetting("devToolsEnabled");
-                if (devToolsEnabled === "true" || devToolsEnabled === true) {
-                    ipcRenderer.send("open-dev-tools-request", { devToolsEnabled: true });
+                // 检查是否启用了开发者工具设置
+                const devToolsEnabled = this.settingManager.getSetting("devToolsEnabled") === "true";
+                if (devToolsEnabled || !app.isPackaged) { // 在开发环境中始终可用
+                    ipcRenderer.send("open-dev-tools");
                 }
             }
 
@@ -610,13 +528,13 @@ class UIManager {
 
         // 侧边栏点击事件
         document.addEventListener("dblclick", (event) => {
-            if (!event.target.closest(".sidebar") && !event.target.closest(".dock.sidebar") && this.settingManager.getSetting("hideSidebar") === "true") {
+            if (!event.target.closest(".sidebar") && !event.target.closest(".dock.sidebar") && this.settingManager.getSetting("hideSidebar") == "true") {
                 document.querySelector(".sidebar").style.transition = "transform 0.3s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s cubic-bezier(0.04, 0.92, 0.4, 0.97)";
                 document.querySelector(".sidebar").parentElement.style.gridTemplateColumns = "0 auto";
                 document.querySelector(".sidebar").style.opacity = "0";
                 // document.querySelector(".sidebar").style.display = "none";
             }
-            if (!event.target.closest(".titbar") && this.settingManager.getSetting("hideTitbar") === "true") {
+            if (!event.target.closest(".titbar") && this.settingManager.getSetting("hideTitbar") == "true") {
                 document.querySelectorAll(".titbar .fadein").forEach((fadeItem) => {
                     fadeItem.classList.add("fadeout");
                 });
@@ -1268,14 +1186,6 @@ class UIManager {
             }
         } catch (error) {
             console.error("更新托盘信息失败:", error);
-        }
-    }
-
-    autoMaximize() {
-        if (this.settingManager.getSetting("autoMaximize") === "true") {
-            ipcRenderer.send("window-maximize", "maximize");
-        } else {
-            ipcRenderer.send("window-maximize", "unmaximize");
         }
     }
 }

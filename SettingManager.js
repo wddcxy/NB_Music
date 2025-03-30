@@ -8,37 +8,6 @@ class SettingManager {
     static DEFAULT_FONT_FAMILY_CUSTOM = "HarmonyOS_Sans";
     static DEFAULT_FONT_FAMILY_FALLBACK = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell";
     static DEFAULT_VOLUME = 50; // 新增：默认音量50dB
-    static DEFAULT_VALUES = {
-        // 默认音量为50%
-        volume: "50",
-        
-        // 默认启用歌词
-        lyricsEnabled: "true",
-        
-        // 默认启用循环歌词同步
-        loopLyricsEnabled: "true",
-        
-        // 默认禁用开发者工具
-        devToolsEnabled: "false",
-        
-        // 默认背景为封面
-        background: "cover",
-        
-        // 默认启用缓存
-        cacheEnabled: "true",
-        
-        // 默认关闭淡入淡出效果
-        fadeEnabled: "false",
-        
-        // 默认自动解析视频标题
-        extractTitle: "true",
-        
-        // 默认不启用桌面歌词
-        desktopLyricsEnabled: "false",
-        
-        // 默认禁用启动时自动播放
-        autoPlayOnStartup: "false"
-    };
 
     constructor() {
         this.settings = {
@@ -58,11 +27,7 @@ class SettingManager {
             hideSidebar: false,
             hideTitbar: false,
             devToolsEnabled: false, // 新增：开发者工具设置，默认禁用
-            autoMaximize: false,
-            lyricSource: "netease", // 新增：歌词来源，默认使用网易云
-            volume: SettingManager.DEFAULT_VOLUME, // 已存在的音量设置
-            loopLyricsEnabled: true, // 新增：循环歌单歌词同步功能，默认开启
-            autoPlayOnStartup: false
+            savePlaybackProgress: true // 新增：保存播放进度设置，默认启用
         };
         this.listeners = new Map();
         this.STORAGE_KEY = "app_settings";
@@ -466,12 +431,8 @@ class SettingManager {
     }
 
     showNotification(message, type = "info") {
-        // 实现通知显示逻辑 - 利用type参数设置通知样式
-        if (window.app && window.app.uiManager) {
-            window.app.uiManager.showNotification(message, type);
-        } else {
-            console.log(`[${type}] ${message}`);
-        }
+        // 实现通知显示逻辑
+        // ...
     }
 
     setupAboutLinks() {

@@ -470,6 +470,18 @@ function createWindow() {
         }
     });
 
+    // 处理开发者工具请求，检查是否应该打开
+    ipcMain.on("open-dev-tools-request", (_, { devToolsEnabled }) => {
+        // 如果设置启用了开发者工具或者是在开发环境中，则打开开发者工具
+        if (devToolsEnabled || !app.isPackaged) {
+            if (win.webContents.isDevToolsOpened()) {
+                win.webContents.closeDevTools();
+            } else {
+                win.webContents.openDevTools();
+            }
+        }
+    });
+
     ipcMain.on('get-cookies', async () => {
         win.webContents.send('get-cookies-success', loadCookies());
     });
