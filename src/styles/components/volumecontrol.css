@@ -17,6 +17,7 @@
     opacity: 0;
     transition: opacity 0.3s ease, transform 0.3s ease;
     margin-bottom: 10px; /* 添加与按钮的间距 */
+    border: 1px solid var(--border-1);
 }
 
 .volume-slider.show {

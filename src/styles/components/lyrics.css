@@ -124,11 +124,16 @@
 }
 
 .char.active {
+  filter: brightness(var(--brightness));
   color: var(--text);
   font-size: 1.25em;
   opacity: 1;
   text-shadow: 0 0 8px var(--rgba-13);
   animation: charPulse 0.3s var(--animation-timing-bounce);
+  background: linear-gradient(90deg, var(--theme-1), var(--theme-2));
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
 }
 
 .char.completed {
@@ -178,20 +183,6 @@
   opacity: 1;
 }
 
-/* 桌面歌词设置面板 */
-.desktop-lyrics-settings {
-  position: absolute;
-  top: 50px;
-  right: 10px;
-  background: var(--bg70);
-  border-radius: 8px;
-  height: 4px;
-  -webkit-appearance: none;
-  background: var(--border-1);
-  border-radius: 2px;
-  outline: none;
-}
-
 .desktop-lyrics-settings .slider::-webkit-slider-thumb {
   -webkit-appearance: none;
   width: 12px;
@@ -201,7 +192,7 @@
   cursor: pointer;
 }
 
-/.desktop-lyrics-settings .slider-value {
+.desktop-lyrics-settings .slider-value {
   width: 30px;
   text-align: right;
   font-size: 12px;
@@ -247,10 +238,9 @@
   position: absolute;
   top: 50px;
   right: 10px;
-  background: var(--bg70);
+  backdrop-filter: blur(10px);
   border-radius: 12px;
   padding: 15px;
-  width: 280px;
   z-index: 99;
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.3);
   transform: translateY(-10px);

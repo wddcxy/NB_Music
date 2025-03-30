@@ -227,7 +227,7 @@ class PlaylistManager {
         }
     }
 
-    async setPlayingNow(index, replay = true) {
+    async setPlayingNow(index, replay = true, autoPlay = true) {
         try {
             if (this.playlist.length === 0) {
                 this.uiManager.showDefaultUi();
@@ -289,10 +289,10 @@ class PlaylistManager {
             }
 
             // 立即更新UI以提供视觉反馈
-            await this.updatePlayingUI(song, replay);
+            await this.updatePlayingUI(song);
 
             // 异步加载和播放音频
-            this.loadAndPlayAudio(song, replay, this.currentLoadingController.signal)
+            this.loadAndPlayAudio(song, replay, this.currentLoadingController.signal, autoPlay)
                 .catch(error => {
                     if (error.name === 'AbortError') {
                         console.log('加载被中断');
@@ -316,7 +316,7 @@ class PlaylistManager {
         }
     }
 
-    async updatePlayingUI(song, replay) {
+    async updatePlayingUI(song) {
         // 更新歌词
         this.lyricsPlayer.changeLyrics(song.lyric);
 
@@ -470,7 +470,7 @@ class PlaylistManager {
             }
         }
     }
-    async loadAndPlayAudio(song, replay, signal) {
+    async loadAndPlayAudio(song, replay, signal, autoPlay = true) {
         const playButton = document.querySelector(".control>.buttons>.play");
         const progressBar = document.querySelector(".player .control .progress .progress-bar .progress-bar-inner");
 
@@ -518,9 +518,15 @@ class PlaylistManager {
             await this.updateMediaSession(song);
             if (signal.aborted) throw new DOMException('Aborted', 'AbortError');
 
-            // 播放音频
-            await this.audioPlayer.audio.play();
-            playButton.classList = "play played";
+            // 根据autoPlay参数决定是否自动播放
+            if (autoPlay) {
+                // 播放音频
+                await this.audioPlayer.audio.play();
+                playButton.classList = "play played";
+            } else {
+                // 只加载不播放
+                playButton.classList = "play paused";
+            }
 
             // 保存播放状态
             this.savePlaylists();

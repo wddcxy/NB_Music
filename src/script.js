@@ -181,8 +181,12 @@ class App {
             if (this.playlistManager.playlist.length > 0) {
                 // 使用保存的播放索引
                 const index = this.playlistManager.playingNow || 0;
-                // 不重置进度
-                this.playlistManager.setPlayingNow(index, false);
+                
+                // 检查是否启用了自动播放
+                const autoPlay = this.settingManager.getSetting("autoPlayOnStartup") === "true";
+                
+                // 不重置进度，根据设置决定是否自动播放
+                this.playlistManager.setPlayingNow(index, false, autoPlay);
                 this.uiManager.renderPlaylist();
             }
 

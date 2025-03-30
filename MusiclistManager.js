@@ -1,18 +1,16 @@
 const axios = require('axios');
 class MusiclistManager {
-    constructor(playlistManager, loginManager) {
+    constructor(playlistManager) {
         this.playlistManager = playlistManager;
         this.playlists = [];
         this.activePlaylistIndex = 0;
         this.lyricSearchType = 'auto';
         this.uiManager = null;
-        this.loginManager = loginManager;
 
         this.musicListContainer = document.querySelector(".content .music-list");
         this.playlistSection = this.musicListContainer.querySelector("#playlistList");
         this.songSection = this.musicListContainer.querySelector("#songList");
         this.newPlaylistBtn = this.musicListContainer.querySelector("#newPlaylist");
-        this.favLinkGroup = document.getElementById('favLinkGroup');
 
         setTimeout(() => {
             this.loadLastPlayedPlaylist();
@@ -105,13 +103,7 @@ class MusiclistManager {
 
         // 设置播放但不自动播放
         if (this.playlistManager.playlist.length > 0) {
-            // 检查是否启用了自动播放
-            const autoPlay = this.playlistManager.settingManager && 
-                this.playlistManager.settingManager.getSetting("autoPlayOnStartup") === "true";
-            
-            // 传递autoPlay参数，控制是否自动播放
-            this.playlistManager.setPlayingNow(this.playlistManager.playingNow, false, autoPlay);
-            
+            this.playlistManager.setPlayingNow(this.playlistManager.playingNow, false);
             if (this.playlistManager.audioPlayer && this.playlistManager.currentTime > 0) {
                 setTimeout(() => {
                     this.playlistManager.audioPlayer.audio.currentTime = this.playlistManager.currentTime;
@@ -192,7 +184,9 @@ class MusiclistManager {
         const importDialog = document.getElementById('importDialog');
         const cancelBtn = document.getElementById('cancelImport');
         const confirmBtn = document.getElementById('confirmImport');
+        const favLinkInput = document.getElementById('favLink');
         const linkLabel = document.getElementById('linkLabel');
+        const formatExample = document.getElementById('formatExample');
 
         // 添加获取自定义下拉框值的辅助函数
         const getCustomSelectValue = (selectId) => {
@@ -202,66 +196,30 @@ class MusiclistManager {
             return selectedItem ? selectedItem.getAttribute('data-value') : null;
         };
 
-        const loadFav = (type) => {
-            let url = 'https://api.bilibili.com/x/v3/fav/folder';
-
-            if (type === 'season') {
-                url += '/collected/list?pn=1&ps=50&platform=web&up_mid=';
-            } else {
-                url += '/created/list-all?up_mid=';
-            }
-
-            axios.get(url + this.loginManager.userMid).then(response => {
-                const data = response.data;
-
-                if (data.code === 0) {
-                    const favLinkSelect = document.createElement("select");
-                    favLinkSelect.id = "favLink";
-
-                    data.data.list.forEach(item => {
-                        const option = document.createElement("option");
-
-                        option.value = item.id;
-                        option.textContent = item.title;
-                        favLinkSelect.appendChild(option);
-                    });
-
-                    this.favLinkGroup.appendChild(favLinkSelect);
-                    this.uiManager.initializeCustomSelects();
-                } else {
-                    console.error(data.message);
-                    this.uiManager.showNotification("获取用户合集失败：" + data.message, "error");
-                }
-            }).catch(error => {
-                console.error(error);
-                this.uiManager.showNotification("获取用户收藏夹失败：" + error.message, "error");
-            });
-        };
-
         // 监听自定义下拉框点击，在事件委托由其他代码处理，这里只处理显示相关内容的更新
         document.addEventListener('click', (e) => {
             // 如果是选择了importType的选项
-            if (e.target.classList.contains('select-item') &&
+            if (e.target.classList.contains('select-item') && 
                 e.target.closest('#importType')) {
-
+                
                 // 更新提示文本基于选中的值
                 const importType = e.target.getAttribute('data-value');
-
                 updateImportTypeUI(importType);
-                this.cleanfavLinkGroup();
-                loadFav(importType);
             }
         });
 
         // 更新导入类型提示的函数
         const updateImportTypeUI = (importType) => {
-            console.log(importType);
             switch (importType) {
                 case 'fav':
-                    linkLabel.textContent = '选择一个收藏夹';
+                    linkLabel.textContent = '收藏夹链接或ID:';
+                    favLinkInput.placeholder = '输入收藏夹链接或ID';
+                    formatExample.textContent = '收藏夹ID或链接(fid=xxx)';
                     break;
                 case 'season':
-                    linkLabel.textContent = '选择一个合集';
+                    linkLabel.textContent = '合集链接或ID:';
+                    favLinkInput.placeholder = '输入合集链接或ID';
+                    formatExample.textContent = '合集链接(space.bilibili.com/xxx/lists/数字)或ID';
                     break;
             }
         };
@@ -273,27 +231,17 @@ class MusiclistManager {
         }, 100);
 
         importBtn.addEventListener('click', () => {
-            // 判断用户是否登录
-            if (!this.loginManager.isLogin) {
-                this.loginManager.showLoginDialog();
-                this.uiManager.showNotification('导入歌单前请先登录', 'info');
-                return;
-            }
-
             importDialog.classList.remove('hide');
-
-            // 获取用户收藏夹
-            loadFav(getCustomSelectValue('importType'));
+            favLinkInput.focus();
         });
 
-        cancelBtn.addEventListener("click", () => {
-            importDialog.classList.add("hide");
-            this.cleanfavLinkGroup();
+        cancelBtn.addEventListener('click', () => {
+            importDialog.classList.add('hide');
+            favLinkInput.value = '';
         });
 
         confirmBtn.addEventListener('click', async () => {
-            const input = getCustomSelectValue('favLink');
-            console.log(input);
+            const input = favLinkInput.value.trim();
             const importType = getCustomSelectValue('importType') || 'fav';
             
             if (!input) {
@@ -320,7 +268,7 @@ class MusiclistManager {
                 if (result.success) {
                     this.uiManager.showNotification(result.message, 'success');
                     importDialog.classList.add('hide');
-                    this.cleanfavLinkGroup();
+                    favLinkInput.value = '';
                     this.renderPlaylistList();
                 } else {
                     this.uiManager.showNotification(result.message, 'error');
@@ -337,15 +285,7 @@ class MusiclistManager {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && !importDialog.classList.contains('hide')) {
                 importDialog.classList.add('hide');
-                this.cleanfavLinkGroup();
-            }
-        });
-    }
-
-    cleanfavLinkGroup() {
-        Array.from(this.favLinkGroup.children).forEach(child => {
-            if (child.id === 'favLink') {
-                child.remove();
+                favLinkInput.value = '';
             }
         });
     }
@@ -354,6 +294,11 @@ class MusiclistManager {
         try {
             if (this.playlists.length === 1 && this.playlists[0].name === "默认歌单" && this.playlists[0].songs.length === 0) {
                 return;
+            }
+            
+            // 触发UI更新
+            if (this.uiManager) {
+                this.uiManager.renderPlaylist();
             }
 
             // 在保存前更新当前活跃歌单的播放位置
@@ -527,6 +472,48 @@ class MusiclistManager {
                 document.querySelector(".player").click();
             });
 
+            // 添加编辑按钮
+            const editBtn = document.createElement("i");
+            editBtn.classList.add("bi", "bi-pencil-square");
+            editBtn.addEventListener("click", (e) => {
+                e.stopPropagation();
+                const originalTitle = title.textContent;
+                
+                // 创建输入框
+                const input = document.createElement('input');
+                input.type = 'text';
+                input.value = originalTitle;
+                input.className = 'song-input';
+                input.style.width = '100%';
+                input.maxLength = 100;
+                input.addEventListener("click", (e) => e.stopPropagation());
+                
+                // 替换原来的标题
+                title.replaceWith(input);
+                input.focus();
+                
+                const handleRename = () => {
+                    const newTitle = input.value.trim();
+                    if (newTitle && newTitle !== originalTitle) {
+                        song.title = newTitle;
+                        this.savePlaylists();
+                        this.renderSongList();
+                    } else {
+                        input.replaceWith(title);
+                    }
+                };
+                
+                input.addEventListener('blur', handleRename);
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        input.blur();
+                    } else if (e.key === 'Escape') {
+                        input.replaceWith(title);
+                    }
+                });
+            });
+            
+            // 添加删除按钮
             const delBtn = document.createElement("i");
             delBtn.classList.add("bi", "bi-trash");
             delBtn.addEventListener("click", (e) => {
@@ -541,7 +528,12 @@ class MusiclistManager {
                 this.playlistManager.uiManager.renderPlaylist();
             });
 
-            li.appendChild(delBtn);
+            // 创建按钮容器
+            const btnContainer = document.createElement('div');
+            btnContainer.classList.add('song-buttons');
+            btnContainer.appendChild(editBtn);
+            btnContainer.appendChild(delBtn);
+            li.appendChild(btnContainer);
             this.songSection.appendChild(li);
         });
     }
@@ -583,6 +575,10 @@ class MusiclistManager {
                 }
                 this.savePlaylists();
                 this.renderPlaylistList();
+                // 更新侧边栏显示
+                if (this.uiManager) {
+                    this.uiManager.updateSidebarPlaylistName(playlistId, newName);
+                }
             } else {
                 input.replaceWith(nameSpan);
             }
@@ -594,6 +590,60 @@ class MusiclistManager {
                 input.blur();
             } else if (e.key === 'Escape') {
                 input.replaceWith(nameSpan);
+            }
+        });
+    }
+    
+    editSongArtist(songId) {
+        const activePlaylist = this.playlists[this.activePlaylistIndex];
+        if (!activePlaylist) return;
+        
+        const song = activePlaylist.songs.find(s => s.id === songId);
+        if (!song) return;
+        
+        const songItem = document.querySelector(`li[data-id="${songId}"]`);
+        const artistSpan = songItem.querySelector('.song-artist');
+        const originalArtist = artistSpan.textContent;
+        
+        // 创建输入框
+        const input = document.createElement('input');
+        input.type = 'text';
+        input.value = originalArtist;
+        input.className = 'song-input';
+        input.maxLength = 50;
+        input.addEventListener("click", (e) => {
+            e.stopPropagation();
+        });
+        
+        // 替换原来的作者
+        artistSpan.replaceWith(input);
+        input.focus();
+        
+        const handleEditArtist = () => {
+            const newArtist = input.value.trim();
+            if (newArtist && newArtist !== originalArtist) {
+                song.artist = newArtist;
+                this.savePlaylists();
+                this.renderSongList();
+                // 更新播放器显示
+                if (this.playlistManager) {
+                    this.playlistManager.updateCurrentSongInfo();
+                }
+                // 更新侧边栏显示
+                if (this.uiManager) {
+                    this.uiManager.updateSidebarSongInfo(songId, {artist: newArtist});
+                }
+            } else {
+                input.replaceWith(artistSpan);
+            }
+        };
+        
+        input.addEventListener('blur', handleEditArtist);
+        input.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') {
+                input.blur();
+            } else if (e.key === 'Escape') {
+                input.replaceWith(artistSpan);
             }
         });
     }
@@ -702,6 +752,11 @@ class MusiclistManager {
             activePlaylist.songs = JSON.parse(JSON.stringify(this.playlistManager.playlist));
             // 保存更新后的歌单
             this.savePlaylists();
+            
+            // 触发UI更新
+            if (this.uiManager) {
+                this.uiManager.renderPlaylist();
+            }
         }
 
         this.renderPlaylistList();
@@ -855,7 +910,7 @@ class MusiclistManager {
                     try {
                         const lyric = await this.musicSearcher.getLyrics(keyword);
                         resolve(lyric);
-                    } catch {
+                    } catch (error) {
                         resolve("暂无歌词，尽情欣赏音乐");
                     }
                 } else {
