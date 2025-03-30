@@ -645,7 +645,7 @@ class MusicSearcher {
                     try {
                         const lyric = await this.getLyrics(keyword);
                         resolve(lyric);
-                    } catch (error) {
+                    } catch {
                         resolve("暂无歌词，尽情欣赏音乐");
                     }
                 } else {

@@ -14,8 +14,7 @@ class PlaylistManager {
         this.currentTime = 0;
         this.currentLoadingController = null;
         this.currentPlayingBvid = null;
-        // 用于随机播放
-        this.shuffledlist = [];
+
         // 'repeat', 'shuffle', 'repeat-one'
         this.playMode = localStorage.getItem('nbmusic_play_mode') || 'repeat';
 
@@ -36,41 +35,7 @@ class PlaylistManager {
         }
         this.loadPlaylists();
     }
-    next() {
-        if (this.playlist.length === 0) return;
-        
-        let nextIndex;
-        switch (this.playMode) {
-            case 'shuffle':
-                // 随机播放
-                if (!this.shuffledlist.length) {
-                    this.shuffledlist = Array.from({length:this.playlist.length},(_, i)=>i);
-                    // Fisher-Yates算法，打乱顺序
-                    for (let i = 1; i < this.shuffledlist.length; i++) {
-                        const random = Math.floor(Math.random() * (i + 1));
-                        [this.shuffledlist[i], this.shuffledlist[random]] = [this.shuffledlist[random], this.shuffledlist[i]];
-                    }
-                 }
-                nextIndex = this.shuffledlist.shift();
-                // 检测是否已经循环完一轮
-                if (!nextIndex) {
-                    // 在重新打乱前临时放第一首
-                    nextIndex = 0;
-                }
-                break;
-            case 'repeat-one':
-                // 单曲循环
-                nextIndex = this.playingNow;
-                break;
-            case 'repeat':
-            default:
-                // 列表循环
-                nextIndex = (this.playingNow + 1) % this.playlist.length;
-                break;
-        }
 
-        this.setPlayingNow(nextIndex);
-    }
     togglePlayMode() {
         const modes = ['repeat', 'shuffle', 'repeat-one'];
         const currentIndex = modes.indexOf(this.playMode);
@@ -462,7 +427,7 @@ class PlaylistManager {
                         if (response.status === 403) {
                             throw new Error('访问被拒绝');
                         }
-                    } catch (error) {
+                    } catch {
                         console.warn('主音频URL不可用，尝试备用URL');
                         const urls = await this.musicSearcher.getAudioLink(song.bvid, true);
                         currentUrl = urls.length > 1 ? urls[1] : urls[0];
