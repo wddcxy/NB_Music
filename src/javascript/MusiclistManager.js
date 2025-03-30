@@ -286,11 +286,10 @@ class MusiclistManager {
         });
 
         confirmBtn.addEventListener('click', async () => {
-            const input = getCustomSelectValue('favLink');
-            console.log(input);
+            const id = getCustomSelectValue('favLink');
             const importType = getCustomSelectValue('importType') || 'fav';
             
-            if (!input) {
+            if (!id) {
                 this.uiManager.showNotification('请输入链接或ID', 'error');
                 return;
             }
@@ -302,10 +301,10 @@ class MusiclistManager {
                 let result;
                 switch (importType) {
                     case 'fav':
-                        result = await this.importFromBiliFav(input);
+                        result = await this.importFromBiliFav(id);
                         break;
                     case 'season':
-                        result = await this.importFromBiliSeason(input);
+                        result = await this.importFromBiliSeason(id);
                         break;
                     default:
                         throw new Error('未知的导入类型');
@@ -702,22 +701,11 @@ class MusiclistManager {
         this.renderSongList();
         this.playlistManager.shuffledlist = [];
     }
-    async importFromBiliFav(mediaId) {
+    async importFromBiliFav(favId) {
         let importNotification = null;
         let lyricsNotification = null;
 
         try {
-            // 解析收藏夹ID
-            let favId = mediaId;
-            if (!/^\d+$/.test(mediaId)) {
-                // 解析链接中的ID
-                const match = mediaId.match(/fid=(\d+)/);
-                if (!match) {
-                    throw new Error('无法解析收藏夹ID，请确认输入格式正确');
-                }
-                favId = match[1];
-            }
-
             // 1. 获取收藏夹信息
             const favResponse = await axios.get(`https://api.bilibili.com/x/v3/fav/folder/info?media_id=${favId}`);
             if (favResponse.data.code !== 0) {
@@ -882,45 +870,11 @@ class MusiclistManager {
         });
     }
 
-    parseInputId(input, type) {
-        // 根据不同类型解析ID
-        switch (type) {
-            case 'fav':
-                if (/^\d+$/.test(input)) {
-                    return input; // 直接输入的ID
-                } else {
-                    // 解析链接中的ID
-                    const match = input.match(/fid=(\d+)/);
-                    if (match) return match[1];
-                }
-                break;
-            case 'season':
-                if (/^\d+$/.test(input)) {
-                    return input; // 直接输入的ID
-                } else {
-                    // 解析合集链接格式：https://space.bilibili.com/1060544882/lists/1049571?type=season
-                    const match = input.match(/\/lists\/(\d+)/) || 
-                                  input.match(/sid=(\d+)/) || 
-                                  input.match(/season_id=(\d+)/);
-                    if (match) return match[1];
-                }
-                break;
-        }
-        
-        return null; // 无法解析
-    }
-
-    async importFromBiliSeason(input) {
+    async importFromBiliSeason(seasonId) {
         let importNotification = null;
         let lyricsNotification = null;
 
         try {
-            // 解析合集ID
-            const seasonId = this.parseInputId(input, 'season');
-            if (!seasonId) {
-                throw new Error('无法解析合集ID，请确认输入格式正确');
-            }
-
             // 1. 获取合集信息，需要mid参数，先尝试获取
             const testResponse = await axios.get(`https://api.bilibili.com/x/polymer/web-space/seasons_archives_list?season_id=${seasonId}&page_num=1&page_size=1`);
             if (testResponse.data.code !== 0) {
