@@ -72,6 +72,7 @@ class SettingManager {
         this.setAppVersion();
         this.setupCustomThemeControls();
         this.applyFontFamily();
+        this.fetchContributors(); // 新增：获取项目贡献者信息
     }
 
     loadSettings() {
@@ -510,6 +511,12 @@ class SettingManager {
                 window.app.showWelcomeDialog();
             }
         });
+        
+        // 查看所有贡献者
+        document.getElementById("view-all-contributors")?.addEventListener("click", (e) => {
+            e.preventDefault();
+            shell.openExternal("https://github.com/NB-Group/NB_Music/graphs/contributors");
+        });
     }
 
     setAppVersion() {
@@ -537,6 +544,80 @@ class SettingManager {
             127: "8K"
         };
         return qualityMap[quality] || "未知";
+    }
+
+    // 新增：获取项目贡献者信息的方法
+    fetchContributors() {
+        const contributorsContainer = document.getElementById("contributors-container");
+        if (!contributorsContainer) return;
+        
+        contributorsContainer.innerHTML = '<div class="loading-contributors">加载中...</div>';
+        
+        // 从GitHub API获取贡献者信息
+        fetch('https://api.github.com/repos/NB-Group/NB_Music/contributors')
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error('获取贡献者信息失败');
+                }
+                return response.json();
+            })
+            .then(contributors => {
+                // 处理获取到的贡献者信息
+                contributorsContainer.innerHTML = '';
+                
+                // 显示最多8个主要贡献者
+                const mainContributors = contributors.slice(0, 8);
+                
+                mainContributors.forEach(contributor => {
+                    const contributorEl = document.createElement('div');
+                    contributorEl.className = 'contributor';
+                    contributorEl.innerHTML = `
+                        <a href="${contributor.html_url}" title="${contributor.login}" class="contributor-link">
+                            <img src="${contributor.avatar_url}" alt="${contributor.login}" class="contributor-avatar" />
+                            <div class="contributor-info">
+                                <div class="contributor-name">${contributor.login}</div>
+                                <div class="contributor-commits">${contributor.contributions} 次贡献</div>
+                            </div>
+                        </a>
+                    `;
+                    
+                    contributorEl.querySelector('a').addEventListener('click', (e) => {
+                        e.preventDefault();
+                        shell.openExternal(contributor.html_url);
+                    });
+                    
+                    contributorsContainer.appendChild(contributorEl);
+                });
+                
+                // 如果贡献者超过8个，添加查看更多按钮
+                if (contributors.length > 8) {
+                    const viewMoreEl = document.createElement('div');
+                    viewMoreEl.className = 'view-more-contributors';
+                    viewMoreEl.innerHTML = `<a href="#" id="view-all-contributors">+${contributors.length - 8} 查看全部</a>`;
+                    contributorsContainer.appendChild(viewMoreEl);
+                    
+                    // 添加事件监听
+                    viewMoreEl.querySelector('a').addEventListener('click', (e) => {
+                        e.preventDefault();
+                        shell.openExternal("https://github.com/NB-Group/NB_Music/graphs/contributors");
+                    });
+                }
+            })
+            .catch(error => {
+                console.error('获取贡献者失败:', error);
+                contributorsContainer.innerHTML = `
+                    <div class="contributors-error">
+                        <i class="bi bi-exclamation-triangle"></i>
+                        <div>加载贡献者信息失败</div>
+                        <a href="#" id="retry-fetch-contributors">重试</a>
+                    </div>
+                `;
+                
+                document.getElementById('retry-fetch-contributors')?.addEventListener('click', (e) => {
+                    e.preventDefault();
+                    this.fetchContributors();
+                });
+            });
     }
 }
 

@@ -472,7 +472,7 @@
                 <a href="#" class="about-link" id="open-welcome"> <i class="bi bi-emoji-smile"></i> 欢迎指南 </a>
               </div>
               <div class="dev-info">
-                <div class="dev-title">开发团队</div>
+                <div class="dev-title">主要开发团队</div>
                 <div class="dev-team">
                   由 <span class="dev-badge"><i class="bi bi-mortarboard"></i> 初中生</span>
                   开发：
@@ -480,20 +480,17 @@
                   <span class="dev-badge">User782Tec</span>
                 </div>
               </div>
-              <!-- 常见问题帮助 -->
-              <div class="help-content">
-                <div class="help-section">
-                  <div class="help-title"><i class="bi bi-music-note-list"></i> 如何导入音乐？</div>
-                  <div class="help-text">在顶部搜索框中搜索歌曲名称或将B站收藏夹导入为歌单。点击左侧歌单页面中的导入按钮，输入B站收藏夹链接或ID即可快速导入。</div>
+
+              <!-- 新增：贡献者展示区域 -->
+              <div class="contributors-section">
+                <div class="contributors-title">
+                  <i class="bi bi-people-fill"></i> 项目贡献者
                 </div>
-                <div class="help-section">
-                  <div class="help-title"><i class="bi bi-exclamation-triangle"></i> 歌曲无法播放？</div>
-                  <div class="help-text">请尝试以下方法：1. 重新点击播放按钮 2. 登录账号以获取更高音质的音源 3. 在设置中关闭音频淡入淡出功能 4.
-                    重启应用。如问题持续，请在GitHub仓库提交issue。</div>
+                <div class="contributors-description">
+                  感谢所有为NB Music做出贡献的开发者
                 </div>
-                <div class="help-section">
-                  <div class="help-title"><i class="bi bi-person-circle"></i> 登录有什么用？</div>
-                  <div class="help-text">登录B站账号后，您可以直接访问自己的收藏夹内容、获取大会员的Hi-res和4k。NB Music不会存储您的账号信息，所有认证均通过官方接口完成。</div>
+                <div class="contributors-grid" id="contributors-container">
+                  <div class="loading-contributors">加载中...</div>
                 </div>
               </div>
             </div>
@@ -891,7 +888,7 @@
         <i class="bi bi-heart"></i>
         <span>收藏</span>
       </a>
-      <a class="playlist-toggle">
+      <a class="playlist-toggle"></a>
         <i class="bi bi-list-ul"></i>
         <span>播放列表</span>
         <div class="count">0</div>
