@@ -13,6 +13,7 @@ class MusiclistManager {
         this.songSection = this.musicListContainer.querySelector("#songList");
         this.newPlaylistBtn = this.musicListContainer.querySelector("#newPlaylist");
         this.favGroup = document.getElementById('favGroup');
+        this.favLinkInputGroup = document.getElementById('favLinkGroup');
 
         setTimeout(() => {
             this.loadLastPlayedPlaylist();
@@ -196,7 +197,6 @@ class MusiclistManager {
         const favLinkLabel = document.getElementById('favLinkLabel');
         const favLinkInput = document.getElementById('favLinkInput');
         const formatExample = document.getElementById('formatExample');
-        const favLinkInputGroup = document.getElementById('favLinkGroup');
 
         // 添加获取自定义下拉框值的辅助函数
         const getCustomSelectValue = (selectId) => {
@@ -269,9 +269,9 @@ class MusiclistManager {
                     loadFav(importType);
                 } else if (e.target.closest('#favSelect')) {
                     if (getCustomSelectValue('favSelect') === 'inputLink') {
-                        favLinkInputGroup.classList.remove('hide');
+                        this.favLinkInputGroup.classList.remove('hide');
                     } else {
-                        favLinkInputGroup.classList.add('hide');
+                        this.favLinkInputGroup.classList.add('hide');
                     }
                 }
             }
@@ -375,6 +375,8 @@ class MusiclistManager {
                 child.remove();
             }
         });
+
+        this.favLinkInputGroup.classList.remove('hide');
     }
 
     savePlaylists() {
