@@ -83,8 +83,16 @@
             <option value="season">合集</option>
           </select>
         </div>
+        <div class="input-group" id="favGroup">
+          <label for="favLink" id="favLabel">选择一个收藏夹</label>
+        </div>
         <div class="input-group" id="favLinkGroup">
-          <label for="favLink" id="linkLabel">选择一个收藏夹</label>
+          <label for="favLinkInput" id="favLinkLabel">链接或ID:</label>
+          <input type="text" id="favLinkInput" placeholder="输入链接或ID" />
+          <div class="link-format-tip">
+            支持的格式:
+            <span class="format-example" id="formatExample">收藏夹ID或链接(fid=xxx)</span>
+          </div>
         </div>
         <div class="input-group">
           <label>自定义歌词搜索:</label>
