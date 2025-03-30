@@ -103,7 +103,13 @@ class MusiclistManager {
 
         // 设置播放但不自动播放
         if (this.playlistManager.playlist.length > 0) {
-            this.playlistManager.setPlayingNow(this.playlistManager.playingNow, false);
+            // 检查是否启用了自动播放
+            const autoPlay = this.playlistManager.settingManager && 
+                this.playlistManager.settingManager.getSetting("autoPlayOnStartup") === "true";
+            
+            // 传递autoPlay参数，控制是否自动播放
+            this.playlistManager.setPlayingNow(this.playlistManager.playingNow, false, autoPlay);
+            
             if (this.playlistManager.audioPlayer && this.playlistManager.currentTime > 0) {
                 setTimeout(() => {
                     this.playlistManager.audioPlayer.audio.currentTime = this.playlistManager.currentTime;

@@ -16,6 +16,12 @@ class LyricsPlayer {
         this.currentSongInfo = null;
         this.ipcRenderer = null;
         
+        // 循环歌词同步相关属性
+        this.isLoopDetected = false;       // 是否检测到循环歌曲
+        this.originalSongDuration = null;  // 原始歌曲时长（毫秒）
+        this.loopDetectionThreshold = 20;  // 循环检测阈值（秒）
+        this.lastLyricTimestamp = 0;       // 最后一句歌词的时间戳
+        
         // 检查是否在Electron环境中
         if (typeof require !== 'undefined') {
             try {
@@ -228,6 +234,12 @@ class LyricsPlayer {
         this.activeLineIndex = -1;
         this.previousActiveIndex = -1;
         this.scrollWrapper.innerHTML = "";
+        
+        // 重置循环检测状态
+        this.isLoopDetected = false;
+        this.originalSongDuration = null;
+        this.lastLyricTimestamp = 0;
+        
         this.parsedData = this.parseLyrics(newLyricsString);
         this.init();
         
@@ -323,6 +335,18 @@ class LyricsPlayer {
                 }
             });
         }
+        
+        // 计算最后一行歌词的时间点
+        this.lastLyricTimestamp = 0;
+        const lyricData = parsedData.filter(data => data.type === "lyric");
+        if (lyricData.length > 0) {
+            const lastLyric = lyricData[lyricData.length - 1];
+            this.lastLyricTimestamp = lastLyric.lineStart + lastLyric.lineDuration;
+            
+            // 尝试检测循环歌曲，延迟执行以确保audio元数据已加载
+            setTimeout(() => this.detectLoopSong(), 2000);
+        }
+        
         return parsedData;
     }
 
@@ -357,13 +381,76 @@ class LyricsPlayer {
         return div;
     }
 
+    // 检测循环歌曲
+    detectLoopSong() {
+        try {
+            // 检查设置是否启用了循环歌词功能
+            if (this.settingManager && this.settingManager.getSetting('loopLyricsEnabled') !== 'true') {
+                this.isLoopDetected = false;
+                return false;
+            }
+            
+            // 必须有最后一行歌词时间戳和音频时长
+            if (!this.lastLyricTimestamp || !this.audio || !this.audio.duration) {
+                this.isLoopDetected = false;
+                return false;
+            }
+            
+            // 将音频时长转为毫秒
+            const videoDuration = this.audio.duration * 1000;
+            
+            // 如果视频时长超过歌词时长的1.5倍，认为是循环视频
+            if (videoDuration > this.lastLyricTimestamp * 1.5) {
+                // 使用歌词时长作为单次循环的大致时长
+                this.originalSongDuration = this.lastLyricTimestamp;
+                this.isLoopDetected = true;
+                
+                console.log("检测到循环歌曲，单次歌曲时长约为:", 
+                            this.originalSongDuration / 1000, "秒，总时长:", 
+                            videoDuration / 1000, "秒");
+                return true;
+            }
+            
+            this.isLoopDetected = false;
+            return false;
+        } catch (error) {
+            console.error("循环歌曲检测失败:", error);
+            this.isLoopDetected = false;
+            return false;
+        }
+    }
+    
+    // 重置歌词状态，用于循环开始时
+    resetLyricsState() {
+        // 清除所有激活状态
+        this.activeLines.clear();
+        this.completedLines.clear();
+        
+        // 重置行索引
+        this.activeLineIndex = -1;
+        this.previousActiveIndex = -1;
+        
+        if (this.isVisible) {
+            // 重置DOM元素状态
+            Array.from(this.scrollWrapper.querySelectorAll(".char")).forEach((char) => {
+                char.classList.remove("active", "completed");
+            });
+            
+            // 重置行位置类
+            Array.from(this.scrollWrapper.querySelectorAll(".lyric-line")).forEach((line) => {
+                line.classList.remove("active", "before-1", "before-2", "before-3", 
+                                   "after-1", "after-2", "after-3", "distant");
+            });
+            
+            // 重新初始化视图
+            this.setupInitialView();
+        }
+    }
 
     start() {
-        // 防止重复启动
-        if (this.animationFrame) {
-            return;
+        if (!this.animationFrame) {
+            this.animationFrame = requestAnimationFrame(() => this.animate());
         }
-        this.animate();
     }
 
     stop() {
@@ -393,7 +480,29 @@ class LyricsPlayer {
         // 这样在页面重新显示时动画状态是最新的
         if (!this.scrollWrapper) return;
         
-        const currentTime = this.audio.currentTime * 1000;
+        // 基本时间计算
+        let currentTime = this.audio.currentTime * 1000; // 毫秒
+        
+        // 循环歌曲时间处理
+        if (this.isLoopDetected && this.originalSongDuration && 
+            this.settingManager.getSetting('loopLyricsEnabled') === 'true') {
+            
+            // 计算循环周期
+            const loopIndex = Math.floor(currentTime / this.originalSongDuration);
+            
+            // 计算循环内的相对时间
+            const relativeTime = currentTime % this.originalSongDuration;
+            
+            // 使用相对时间处理歌词
+            currentTime = relativeTime;
+            
+            // 如果检测到刚开始新的循环（防止频繁触发）
+            if (relativeTime < 100 && loopIndex > 0) {
+                // 重置歌词状态
+                this.resetLyricsState();
+            }
+        }
+        
         let activeLineFound = -1;
         let anyCharActive = false;
 
