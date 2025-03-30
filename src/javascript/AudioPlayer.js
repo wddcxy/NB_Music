@@ -35,10 +35,7 @@ class AudioPlayer {
             this.playlistManager.savePlaylists();
             this.lastProgressSaveTime = Date.now();
             this.isPlayRequestPending = false; // 重置请求状态
-            
-            if (this.playlistManager) {
-                this.playlistManager.next();
-            }
+            this.next();
         });
         
         // 监听错误事件

@@ -77,6 +77,9 @@
   --error: #ff3b30;
   --success: #4caf50;
   --warning: #ff9500;
+
+  --brightness: 1.5;
+
 }
 
 /* 浅色主题变量 */
@@ -117,4 +120,6 @@
   --error: #dc3545;
   --success: #198754;
   --warning: #ffc107;
+
+  --brightness: 0.8;
 }
