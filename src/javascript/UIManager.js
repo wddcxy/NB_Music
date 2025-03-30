@@ -268,17 +268,57 @@ class UIManager {
     initializeSettings() {
         // 监听歌词显示设置变更
         this.settingManager.addListener("lyricsEnabled", (newValue) => {
-            if (this.lyricsPlayer) {
-                this.lyricsPlayer.setVisibility(newValue === "true");
+            if (this.audioPlayer && this.audioPlayer.lyricsPlayer) {
+                this.audioPlayer.lyricsPlayer.setVisibility(newValue === "true");
+            }
+            
+            const lyricsContainer = document.getElementById("lyrics-container");
+            if (lyricsContainer) {
+                if (newValue === "true") {
+                    lyricsContainer.style.display = "block";
+                    
+                    // 延迟一点时间，确保DOM更新后再刷新布局
+                    setTimeout(() => {
+                        if (this.audioPlayer && this.audioPlayer.lyricsPlayer) {
+                            this.audioPlayer.lyricsPlayer.refreshLayout();
+                        }
+                    }, 100);
+                } else {
+                    lyricsContainer.style.display = "none";
+                }
             }
         });
-        // 主题切换事件
-        this.settingManager.addListener("theme", (newValue, oldValue) => {
-            if (newValue == "auto") {
-                newValue = window.matchMedia("(prefers-color-scheme: dark)").matches ? "dark" : "light";
+        
+        // 监听循环歌词同步设置变更
+        this.settingManager.addListener("loopLyricsEnabled", () => {
+            // 如果有活跃的歌词播放器，尝试重新检测循环
+            if (this.audioPlayer && this.audioPlayer.lyricsPlayer) {
+                // 清除现有检测状态
+                this.audioPlayer.lyricsPlayer.isLoopDetected = false;
+                this.audioPlayer.lyricsPlayer.originalSongDuration = null;
+                
+                // 重新检测
+                setTimeout(() => {
+                    this.audioPlayer.lyricsPlayer.detectLoopSong();
+                }, 500);
             }
-            document.querySelector("html").classList.remove(oldValue);
-            document.querySelector("html").classList.add(newValue);
+        });
+        
+        // 应用默认设置
+        const lyricsEnabled = this.settingManager.getSetting("lyricsEnabled");
+        if (lyricsEnabled === "true" || lyricsEnabled === true) {
+            if (document.getElementById("lyrics-container")) {
+                document.getElementById("lyrics-container").style.display = "block";
+            }
+        } else {
+            if (document.getElementById("lyrics-container")) {
+                document.getElementById("lyrics-container").style.display = "none";
+            }
+        }
+
+        // 主题切换事件
+        this.settingManager.addListener("theme", (newValue) => {
+            document.documentElement.setAttribute("data-theme", newValue);
         });
 
         // 背景切换事件
@@ -516,10 +556,10 @@ class UIManager {
         window.addEventListener("keydown", (e) => {
             // F12 打开开发者工具
             if (e.key === "F12") {
-                // 检查是否启用了开发者工具设置
-                const devToolsEnabled = this.settingManager.getSetting("devToolsEnabled") === "true";
-                if (devToolsEnabled || !app.isPackaged) { // 在开发环境中始终可用
-                    ipcRenderer.send("open-dev-tools");
+                // 检查是否启用了DevTools
+                const devToolsEnabled = this.settingManager.getSetting("devToolsEnabled");
+                if (devToolsEnabled === "true" || devToolsEnabled === true) {
+                    ipcRenderer.send("open-dev-tools-request", { devToolsEnabled: true });
                 }
             }
 
