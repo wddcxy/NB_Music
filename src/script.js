@@ -54,9 +54,9 @@ class App {
             // 4. 创建其他依赖UI管理器的组件
             this.favoriteManager = new FavoriteManager(this.playlistManager, this.uiManager);
             this.musicSearcher = new MusicSearcher();
-            this.musiclistManager = new MusiclistManager(this.playlistManager);
             this.cacheManager = new CacheManager();
             this.loginManager = new LoginManager(this.uiManager);
+            this.musiclistManager = new MusiclistManager(this.playlistManager, this.loginManager);
             this.updateManager = new UpdateManager();
             this.localImportManager = new LocalImportManager(this.playlistManager, this.uiManager);
             this.videoPlayerManager = new VideoPlayerManager(this.playlistManager, this.uiManager);

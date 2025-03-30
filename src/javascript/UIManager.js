@@ -995,7 +995,7 @@ class UIManager {
 
             // 点击选项时更新选中状态
             item.addEventListener("click", (e) => {
-                e.stopPropagation();
+                // e.stopPropagation();
 
                 // 视觉上的选中效果
                 selectItems.querySelectorAll(".select-item").forEach((el) => {

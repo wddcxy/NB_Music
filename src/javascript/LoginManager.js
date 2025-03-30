@@ -22,6 +22,7 @@ class LoginManager {
         this.isLogin = false;
         this.showAccountOptions = false;
         this.cookie = '';
+        this.userMid = '';
 
         ipcRenderer.send('get-cookies');
         ipcRenderer.once('get-cookies-success', (event, cookie) => {
@@ -43,18 +44,19 @@ class LoginManager {
                 this.isLogin = true;
                 const userData = response.data.data;
                 const username = userData.uname;
-                const mid = userData.mid;
 
+                // 赋值用户MID以便于其他地方使用
+                this.userMid = userData.mid;
 
-                document.getElementById('account-home').addEventListener('click', () => open('https://space.bilibili.com/' + mid));
+                document.getElementById('account-home').addEventListener('click', () => open('https://space.bilibili.com/' + this.userMid));
                 
                 if (this.loginBtn) {
                     // 先更新文本
                     this.loginBtn.innerHTML = `<img class="user-avatar" alt="用户头像" /> <span>${username}</span>`;
                     
                     // 异步获取并添加用户头像
-                    if (mid) {
-                        this.getUserAvatar(mid).then(avatar => {
+                    if (this.userMid) {
+                        this.getUserAvatar(this.userMid).then(avatar => {
                             const avatarImg = this.loginBtn.querySelector('.user-avatar');
                             if (avatarImg) {
                                 avatarImg.src = avatar;
