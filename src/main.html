@@ -76,16 +76,19 @@
     <div class="dialog">
       <h2>从B站导入</h2>
       <div class="dialog-content">
-        <div class="input-group">
+        <div class="input-group" style="margin-top: 15px;">
           <label for="importType">导入类型:</label>
           <select id="importType">
             <option value="fav">收藏夹</option>
             <option value="season">合集</option>
           </select>
         </div>
-        <div class="input-group">
-          <label for="favLink" id="linkLabel">链接或ID:</label>
-          <input type="text" id="favLink" placeholder="输入链接或ID" />
+        <div class="input-group" id="favGroup">
+          <label for="favLink" id="favLabel">选择一个收藏夹</label>
+        </div>
+        <div class="input-group" id="favLinkGroup">
+          <label for="favLinkInput" id="favLinkLabel">链接或ID:</label>
+          <input type="text" id="favLinkInput" placeholder="输入链接或ID" />
           <div class="link-format-tip">
             支持的格式:
             <span class="format-example" id="formatExample">收藏夹ID或链接(fid=xxx)</span>
@@ -674,6 +677,23 @@
                 </div>
               </div>
 
+              <!-- 添加自动播放设置 -->
+              <div class="setting-item">
+                <div class="setting-info">
+                  <i class="bi bi-play-circle"></i>
+                  <div class="words">
+                    <div class="setting-name">启动自动播放</div>
+                    <div class="setting-descrition">启动软件时自动开始播放上次的歌曲</div>
+                  </div>
+                </div>
+                <div class="setting-value">
+                  <nav data-nav-id="nav-autoplay">
+                    <a data-key="autoPlayOnStartup" data-value="true">启用</a>
+                    <a class="active" data-key="autoPlayOnStartup" data-value="false">禁用</a>
+                  </nav>
+                </div>
+              </div>
+
               <!-- 新增循环歌词同步设置 -->
               <div class="setting-item">
                 <div class="setting-info">
@@ -835,25 +855,7 @@
                   </nav>
                 </div>
               </div>
-              
-              <!-- 添加自动播放设置 -->
-              <div class="setting-item">
-                <div class="setting-info">
-                  <i class="bi bi-play-circle"></i>
-                  <div class="words">
-                    <div class="setting-name">启动自动播放</div>
-                    <div class="setting-descrition">启动软件时自动开始播放上次的歌曲</div>
-                  </div>
-                </div>
-                <div class="setting-value">
-                  <nav data-nav-id="nav-autoplay">
-                    <a data-key="autoPlayOnStartup" data-value="true">启用</a>
-                    <a class="active" data-key="autoPlayOnStartup" data-value="false">禁用</a>
-                  </nav>
-                </div>
-              </div>
             </div>
-
           </div>
         </div>
       </div>

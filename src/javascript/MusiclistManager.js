@@ -1,16 +1,19 @@
 const axios = require('axios');
 class MusiclistManager {
-    constructor(playlistManager) {
+    constructor(playlistManager, loginManager) {
         this.playlistManager = playlistManager;
         this.playlists = [];
         this.activePlaylistIndex = 0;
         this.lyricSearchType = 'auto';
         this.uiManager = null;
+        this.loginManager = loginManager;
 
         this.musicListContainer = document.querySelector(".content .music-list");
         this.playlistSection = this.musicListContainer.querySelector("#playlistList");
         this.songSection = this.musicListContainer.querySelector("#songList");
         this.newPlaylistBtn = this.musicListContainer.querySelector("#newPlaylist");
+        this.favGroup = document.getElementById('favGroup');
+        this.favLinkInputGroup = document.getElementById('favLinkGroup');
 
         setTimeout(() => {
             this.loadLastPlayedPlaylist();
@@ -190,8 +193,9 @@ class MusiclistManager {
         const importDialog = document.getElementById('importDialog');
         const cancelBtn = document.getElementById('cancelImport');
         const confirmBtn = document.getElementById('confirmImport');
-        const favLinkInput = document.getElementById('favLink');
-        const linkLabel = document.getElementById('linkLabel');
+        const favLabel = document.getElementById('favLabel');
+        const favLinkLabel = document.getElementById('favLinkLabel');
+        const favLinkInput = document.getElementById('favLinkInput');
         const formatExample = document.getElementById('formatExample');
 
         // 添加获取自定义下拉框值的辅助函数
@@ -202,15 +206,74 @@ class MusiclistManager {
             return selectedItem ? selectedItem.getAttribute('data-value') : null;
         };
 
+        const loadFav = (type) => {
+            const favSelect = document.createElement("select");
+            favSelect.id = "favSelect";
+
+            const option = document.createElement("option");
+
+            option.value = 'inputLink';
+
+            let url = 'https://api.bilibili.com/x/v3/fav/folder';
+
+            if (type === 'season') {
+                url += '/collected/list?pn=1&ps=50&platform=web&up_mid=';
+                option.textContent = '手动输入合集链接';
+            } else {
+                url += '/created/list-all?up_mid=';
+                option.textContent = '手动输入收藏夹链接';
+            }
+
+            favSelect.appendChild(option);
+
+            if (this.loginManager.isLogin) {
+                axios.get(url + this.loginManager.userMid).then(response => {
+                    const data = response.data;
+
+                    if (data.code === 0) {
+                        data.data.list.forEach(item => {
+                            const option = document.createElement("option");
+
+                            option.value = item.id;
+                            option.textContent = item.title;
+                            favSelect.appendChild(option);
+                        });
+
+                        this.favGroup.appendChild(favSelect);
+                        this.uiManager.initializeCustomSelects();
+                    } else {
+                        console.error(data.message);
+                        this.uiManager.showNotification("获取用户合集失败：" + data.message, "error");
+                    }
+                }).catch(error => {
+                    console.error(error);
+                    this.uiManager.showNotification("获取用户收藏夹失败：" + error.message, "error");
+                });
+            } else {
+                this.favGroup.appendChild(favSelect);
+                this.uiManager.initializeCustomSelects();
+            }
+        };
+
         // 监听自定义下拉框点击，在事件委托由其他代码处理，这里只处理显示相关内容的更新
         document.addEventListener('click', (e) => {
-            // 如果是选择了importType的选项
-            if (e.target.classList.contains('select-item') && 
-                e.target.closest('#importType')) {
-                
-                // 更新提示文本基于选中的值
-                const importType = e.target.getAttribute('data-value');
-                updateImportTypeUI(importType);
+            if (e.target.classList.contains('select-item')) {
+                // 如果是选择了importType的选项
+                if (e.target.closest('#importType')) {
+
+                    // 更新提示文本基于选中的值
+                    const importType = e.target.getAttribute('data-value');
+
+                    updateImportTypeUI(importType);
+                    this.cleanFavGroup();
+                    loadFav(importType);
+                } else if (e.target.closest('#favSelect')) {
+                    if (getCustomSelectValue('favSelect') === 'inputLink') {
+                        this.favLinkInputGroup.classList.remove('hide');
+                    } else {
+                        this.favLinkInputGroup.classList.add('hide');
+                    }
+                }
             }
         });
 
@@ -218,12 +281,14 @@ class MusiclistManager {
         const updateImportTypeUI = (importType) => {
             switch (importType) {
                 case 'fav':
-                    linkLabel.textContent = '收藏夹链接或ID:';
+                    favLabel.textContent = '选择一个收藏夹';
+                    favLinkLabel.textContent = '收藏夹链接或ID:';
                     favLinkInput.placeholder = '输入收藏夹链接或ID';
                     formatExample.textContent = '收藏夹ID或链接(fid=xxx)';
                     break;
                 case 'season':
-                    linkLabel.textContent = '合集链接或ID:';
+                    favLabel.textContent = '选择一个合集';
+                    favLinkLabel.textContent = '合集链接或ID:';
                     favLinkInput.placeholder = '输入合集链接或ID';
                     formatExample.textContent = '合集链接(space.bilibili.com/xxx/lists/数字)或ID';
                     break;
@@ -237,18 +302,24 @@ class MusiclistManager {
         }, 100);
 
         importBtn.addEventListener('click', () => {
+            loadFav(getCustomSelectValue('importType'));
+
             importDialog.classList.remove('hide');
-            favLinkInput.focus();
         });
 
-        cancelBtn.addEventListener('click', () => {
-            importDialog.classList.add('hide');
+        cancelBtn.addEventListener("click", () => {
+            importDialog.classList.add("hide");
+            this.cleanFavGroup();
             favLinkInput.value = '';
         });
 
         confirmBtn.addEventListener('click', async () => {
-            const input = favLinkInput.value.trim();
+            let input = getCustomSelectValue('favSelect');
             const importType = getCustomSelectValue('importType') || 'fav';
+
+            if (input === 'inputLink') {
+                input = favLinkInput.value.trim();
+            }
             
             if (!input) {
                 this.uiManager.showNotification('请输入链接或ID', 'error');
@@ -274,6 +345,7 @@ class MusiclistManager {
                 if (result.success) {
                     this.uiManager.showNotification(result.message, 'success');
                     importDialog.classList.add('hide');
+                    this.cleanFavGroup();
                     favLinkInput.value = '';
                     this.renderPlaylistList();
                 } else {
@@ -291,9 +363,20 @@ class MusiclistManager {
         document.addEventListener('keydown', (e) => {
             if (e.key === 'Escape' && !importDialog.classList.contains('hide')) {
                 importDialog.classList.add('hide');
+                this.cleanFavGroup();
                 favLinkInput.value = '';
             }
         });
+    }
+
+    cleanFavGroup() {
+        Array.from(this.favGroup.children).forEach(child => {
+            if (child.id === 'favSelect') {
+                child.remove();
+            }
+        });
+
+        this.favLinkInputGroup.classList.remove('hide');
     }
 
     savePlaylists() {
@@ -834,43 +917,30 @@ class MusiclistManager {
         });
     }
 
-    parseInputId(input, type) {
-        // 根据不同类型解析ID
-        switch (type) {
-            case 'fav':
-                if (/^\d+$/.test(input)) {
-                    return input; // 直接输入的ID
-                } else {
-                    // 解析链接中的ID
-                    const match = input.match(/fid=(\d+)/);
-                    if (match) return match[1];
-                }
-                break;
-            case 'season':
-                if (/^\d+$/.test(input)) {
-                    return input; // 直接输入的ID
-                } else {
-                    // 解析合集链接格式：https://space.bilibili.com/1060544882/lists/1049571?type=season
-                    const match = input.match(/\/lists\/(\d+)/) || 
-                                  input.match(/sid=(\d+)/) || 
-                                  input.match(/season_id=(\d+)/);
-                    if (match) return match[1];
-                }
-                break;
-        }
-        
-        return null; // 无法解析
-    }
-
     async importFromBiliSeason(input) {
         let importNotification = null;
         let lyricsNotification = null;
 
         try {
+            let seasonId;
+
             // 解析合集ID
-            const seasonId = this.parseInputId(input, 'season');
-            if (!seasonId) {
-                throw new Error('无法解析合集ID，请确认输入格式正确');
+            if (/^\d+$/.test(input)) {
+                seasonId = input; // 直接输入的ID
+            } else {
+                // 尝试格式1
+                // 链接格式：https://space.bilibili.com/1060544882/lists/1049571?type=season
+                const match = input.match(/\/lists\/(\d+)/) ||
+                    input.match(/sid=(\d+)/) ||
+                    input.match(/season_id=(\d+)/);
+                if (match) seasonId = match[1];
+                else {
+                    // 尝试格式2
+                    // 链接格式：https://space.bilibili.com/1060544882/favlist?fid=1049571&ftype=collect&ctype=21
+                    const match2 = input.match(/fid=(\d+)/);
+                    if (match2) seasonId = match2[1];
+                    else throw new Error('无法解析合集ID，请确认输入格式正确');
+                }
             }
 
             // 1. 获取合集信息，需要mid参数，先尝试获取
