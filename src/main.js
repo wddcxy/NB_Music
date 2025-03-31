@@ -10,6 +10,7 @@ const https = require("https");
 
 let browserAuthServer = null;
 
+axios.defaults.withCredentials = true;
 
 function parseCommandLineArgs() {
     const args = process.argv.slice(1);
@@ -131,8 +132,8 @@ function getIconPath() {
 function createTrayMenu(win) {
     const iconPath = getIconPath();
     const tray = new Tray(iconPath);
-    
-    if (process.platform === 'darwin') {        
+
+    if (process.platform === "darwin") {
         // 设置托盘图标大小
         const trayIcon = nativeImage.createFromPath(iconPath);
         const resizedTrayIcon = trayIcon.resize({
@@ -290,16 +291,16 @@ function createDesktopLyricsWindow() {
     desktopLyricsWindow.loadFile("src/desktop-lyrics.html");
 
     // 桌面歌词窗口准备好时显示
-    desktopLyricsWindow.once('ready-to-show', () => {
+    desktopLyricsWindow.once("ready-to-show", () => {
         desktopLyricsWindow.show();
     });
 
     // 监听窗口关闭事件
-    desktopLyricsWindow.on('closed', () => {
+    desktopLyricsWindow.on("closed", () => {
         desktopLyricsWindow = null;
         // 通知主窗口桌面歌词已关闭
         if (global.mainWindow) {
-            global.mainWindow.webContents.send('desktop-lyrics-closed');
+            global.mainWindow.webContents.send("desktop-lyrics-closed");
         }
     });
 
@@ -342,7 +343,7 @@ function createWindow() {
         win.show();
         win.focus();
     });
-    
+
     // 保持窗口活跃 - 即使最小化也运行动画和计时器
     win.webContents.setBackgroundThrottling(false);
 
@@ -391,9 +392,9 @@ function createWindow() {
     });
 
     ipcMain.on("window-maximize", (_, order) => {
-        if (order === 'maximize') {
+        if (order === "maximize") {
             win.maximize();
-        } else if (order === 'unmaximize') {
+        } else if (order === "unmaximize") {
             win.unmaximize();
         } else {
             if (win.isMaximized()) {
@@ -431,12 +432,12 @@ function createWindow() {
     });
 
     // 监听窗口最小化事件
-    win.on('minimize', () => {
-        win.webContents.send('window-minimized');
+    win.on("minimize", () => {
+        win.webContents.send("window-minimized");
     });
-    
-    win.on('restore', () => {
-        win.webContents.send('window-restored');
+
+    win.on("restore", () => {
+        win.webContents.send("window-restored");
     });
 
     // 添加新的login-success处理
@@ -482,103 +483,123 @@ function createWindow() {
         }
     });
 
-    ipcMain.on('get-cookies', async () => {
-        win.webContents.send('get-cookies-success', loadCookies());
+    ipcMain.on("get-cookies", async () => {
+        win.webContents.send("get-cookies-success", loadCookies());
     });
 
-    ipcMain.on('logout', async () => {
+    ipcMain.on("logout", async () => {
         storage.delete("cookies");
-        win.webContents.send('logout-success');
+        win.webContents.send("logout-success");
 
         setBilibiliRequestCookie("");
     });
 
-    ipcMain.on('start-browser-auth-server', async () => {
+    ipcMain.handle("get-download-path", async () => {
+        return app.getPath("downloads");
+    });
+
+    ipcMain.on("start-browser-auth-server", async () => {
         if (browserAuthServer === null) {
-            browserAuthServer = https.createServer({
-                key: fs.readFileSync(path.join(__dirname, '..', 'ssl', 'privkey.pem')), // 私钥
-                cert: fs.readFileSync(path.join(__dirname, '..', 'ssl', 'fullchain.pem')) // 证书
-            }, function (request, response) {
-                if (request.url === '/callback') {
-                    let cookieString = request.headers.cookie + ';nbmusic_loginmode=browser';
+            browserAuthServer = https
+                .createServer(
+                    {
+                        key: fs.readFileSync(path.join(__dirname, "..", "ssl", "privkey.pem")), // 私钥
+                        cert: fs.readFileSync(path.join(__dirname, "..", "ssl", "fullchain.pem")) // 证书
+                    },
+                    function (request, response) {
+                        if (request.url === "/callback") {
+                            let cookieString = request.headers.cookie + ";nbmusic_loginmode=browser";
 
-                    // 直接保存cookie字符串
-                    saveCookies(cookieString);
+                            // 直接保存cookie字符串
+                            saveCookies(cookieString);
 
-                    // 设置请求头
-                    setBilibiliRequestCookie(cookieString);
+                            // 设置请求头
+                            setBilibiliRequestCookie(cookieString);
 
-                    response.writeHead(200, { 'Content-Type': 'application/json' });
-                    response.end(JSON.stringify({
-                        status: 0,
-                        data: {
-                            isLogin: true,
-                            message: '登录成功'
-                        }
-                    }));
+                            response.writeHead(200, { "Content-Type": "application/json" });
+                            response.end(
+                                JSON.stringify({
+                                    status: 0,
+                                    data: {
+                                        isLogin: true,
+                                        message: "登录成功"
+                                    }
+                                })
+                            );
 
-                    win.webContents.send('cookies-set', true);
+                            win.webContents.send("cookies-set", true);
 
-                    browserAuthServer.close();
-                    browserAuthServer = null;
-                } else if (request.url === '/background.png') {
-                    response.writeHead(200, { 'Content-Type': 'image/png' });
-                    response.end(fs.readFileSync(path.join(__dirname, '..', 'img', 'NB_Music.png')));
-                } else if (request.url === '/HarmonyOS_Sans.woff2') {
-                    response.writeHead(200, { 'Content-Type': 'font/woff2' });
-                    response.end(fs.readFileSync(path.join(__dirname, '..', 'fonts', 'HarmonyOS_Sans_Medium.woff2')));
-                } else if (request.url === '/getUserInfo') {
-                    axios.get('https://api.bilibili.com/x/web-interface/nav', {
-                        headers: {
-                            "Cookie": request.headers.cookie,
-                            "Referer": "https://www.bilibili.com/",
-                            "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
-                        }
-                    }).then(res => {
-                        const data = res.data.data;
+                            browserAuthServer.close();
+                            browserAuthServer = null;
+                        } else if (request.url === "/background.png") {
+                            response.writeHead(200, { "Content-Type": "image/png" });
+                            response.end(fs.readFileSync(path.join(__dirname, "..", "img", "NB_Music.png")));
+                        } else if (request.url === "/HarmonyOS_Sans.woff2") {
+                            response.writeHead(200, { "Content-Type": "font/woff2" });
+                            response.end(fs.readFileSync(path.join(__dirname, "..", "fonts", "HarmonyOS_Sans_Medium.woff2")));
+                        } else if (request.url === "/getUserInfo") {
+                            axios
+                                .get("https://api.bilibili.com/x/web-interface/nav", {
+                                    headers: {
+                                        Cookie: request.headers.cookie,
+                                        Referer: "https://www.bilibili.com/",
+                                        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36"
+                                    }
+                                })
+                                .then((res) => {
+                                    const data = res.data.data;
 
-                        response.writeHead(200, { 'Content-Type': 'application/json' });
-                        if (data.isLogin) {
-                            response.end(JSON.stringify({
-                                status: 0,
-                                data: {
-                                    isLogin: true,
-                                    avatar: data.face,
-                                    name: data.uname,
-                                    mid: data.mid,
-                                }
-                            }));
+                                    response.writeHead(200, { "Content-Type": "application/json" });
+                                    if (data.isLogin) {
+                                        response.end(
+                                            JSON.stringify({
+                                                status: 0,
+                                                data: {
+                                                    isLogin: true,
+                                                    avatar: data.face,
+                                                    name: data.uname,
+                                                    mid: data.mid
+                                                }
+                                            })
+                                        );
+                                    } else {
+                                        response.end(
+                                            JSON.stringify({
+                                                status: 0,
+                                                data: {
+                                                    isLogin: false
+                                                }
+                                            })
+                                        );
+                                    }
+                                })
+                                .catch((error) => {
+                                    console.error("获取用户信息失败:", error);
+
+                                    response.writeHead(500, { "Content-Type": "application/json" });
+                                    response.end(
+                                        JSON.stringify({
+                                            status: -1,
+                                            data: {
+                                                message: "服务内部错误"
+                                            }
+                                        })
+                                    );
+                                });
+                        } else if (request.url === "/favicon.ico") {
+                            response.writeHead(200, { "Content-Type": "image/x-icon" });
+                            response.end(fs.readFileSync(path.join(__dirname, "..", "icons", "icon.ico")));
                         } else {
-                            response.end(JSON.stringify({
-                                status: 0,
-                                data: {
-                                    isLogin: false
-                                }
-                            }));
+                            response.writeHead(200, { "Content-Type": "text/html" });
+                            response.end(fs.readFileSync(path.join(__dirname, "login.html")));
                         }
-                    }).catch(error => {
-                        console.error('获取用户信息失败:', error);
-
-                        response.writeHead(500, { 'Content-Type': 'application/json' });
-                        response.end(JSON.stringify({
-                            status: -1,
-                            data: {
-                                message: "服务内部错误"
-                            }
-                        }));
-                    });
-                } else if (request.url === '/favicon.ico') {
-                    response.writeHead(200, { 'Content-Type': 'image/x-icon' });
-                    response.end(fs.readFileSync(path.join(__dirname, '..', 'icons', 'icon.ico')));
-                } else {
-                    response.writeHead(200, { 'Content-Type': 'text/html' });
-                    response.end(fs.readFileSync(path.join(__dirname, 'login.html')));
-                }
-            }).listen(62687);
+                    }
+                )
+                .listen(62687);
         }
     });
 
-    ipcMain.on('close-browser-auth-server', async () => {
+    ipcMain.on("close-browser-auth-server", async () => {
         if (browserAuthServer !== null) {
             browserAuthServer.close();
             browserAuthServer = null;
@@ -670,7 +691,7 @@ function setupIPC() {
     });
 
     // 桌面歌词相关IPC通信
-    ipcMain.on('toggle-desktop-lyrics', (event, enabled) => {
+    ipcMain.on("toggle-desktop-lyrics", (event, enabled) => {
         if (enabled) {
             createDesktopLyricsWindow();
         } else if (desktopLyricsWindow) {
@@ -679,87 +700,87 @@ function setupIPC() {
         }
     });
 
-    ipcMain.on('update-desktop-lyrics', (event, lyricsData) => {
+    ipcMain.on("update-desktop-lyrics", (event, lyricsData) => {
         if (desktopLyricsWindow) {
-            desktopLyricsWindow.webContents.send('update-desktop-lyrics', lyricsData);
+            desktopLyricsWindow.webContents.send("update-desktop-lyrics", lyricsData);
         }
     });
 
-    ipcMain.on('update-lyrics-style', (event, style) => {
+    ipcMain.on("update-lyrics-style", (event, style) => {
         if (desktopLyricsWindow) {
-            desktopLyricsWindow.webContents.send('update-lyrics-style', style);
+            desktopLyricsWindow.webContents.send("update-lyrics-style", style);
         }
     });
 
     // 处理播放控制
-    ipcMain.on('desktop-lyrics-toggle-play', () => {
+    ipcMain.on("desktop-lyrics-toggle-play", () => {
         if (global.mainWindow) {
-            global.mainWindow.webContents.send('desktop-lyrics-control', 'toggle-play');
+            global.mainWindow.webContents.send("desktop-lyrics-control", "toggle-play");
         }
     });
-    
+
     // 处理进度条拖动
-    ipcMain.on('desktop-lyrics-seek', (event, time) => {
+    ipcMain.on("desktop-lyrics-seek", (event, time) => {
         if (global.mainWindow) {
-            global.mainWindow.webContents.send('desktop-lyrics-control', 'seek', time);
+            global.mainWindow.webContents.send("desktop-lyrics-control", "seek", time);
         }
     });
 
     // 新增桌面歌词样式更新事件
-    ipcMain.on('desktop-lyrics-update-style', (event, style) => {
+    ipcMain.on("desktop-lyrics-update-style", (event, style) => {
         if (global.mainWindow) {
-            global.mainWindow.webContents.send('desktop-lyrics-style-changed', style);
+            global.mainWindow.webContents.send("desktop-lyrics-style-changed", style);
         }
     });
 
     // 处理窗口大小调整
-    ipcMain.on('desktop-lyrics-resize', (event, size) => {
+    ipcMain.on("desktop-lyrics-resize", (event, size) => {
         if (desktopLyricsWindow) {
             desktopLyricsWindow.setSize(size.width, size.height);
         }
     });
 
     // 处理背景颜色选择
-    ipcMain.on('desktop-lyrics-bg-color', () => {
+    ipcMain.on("desktop-lyrics-bg-color", () => {
         if (global.mainWindow) {
-            global.mainWindow.webContents.send('show-lyrics-bg-color-picker');
+            global.mainWindow.webContents.send("show-lyrics-bg-color-picker");
         }
     });
 
-    ipcMain.on('desktop-lyrics-ready', () => {
+    ipcMain.on("desktop-lyrics-ready", () => {
         // 桌面歌词窗口准备好后，通知主窗口
         if (global.mainWindow) {
-            global.mainWindow.webContents.send('desktop-lyrics-ready');
+            global.mainWindow.webContents.send("desktop-lyrics-ready");
         }
     });
 
-    ipcMain.on('desktop-lyrics-toggle-pin', () => {
+    ipcMain.on("desktop-lyrics-toggle-pin", () => {
         if (desktopLyricsWindow) {
             const isAlwaysOnTop = desktopLyricsWindow.isAlwaysOnTop();
             desktopLyricsWindow.setAlwaysOnTop(!isAlwaysOnTop);
             // 通知主窗口锁定状态已改变
             if (global.mainWindow) {
-                global.mainWindow.webContents.send('desktop-lyrics-pin-changed', !isAlwaysOnTop);
+                global.mainWindow.webContents.send("desktop-lyrics-pin-changed", !isAlwaysOnTop);
             }
         }
     });
 
-    ipcMain.on('desktop-lyrics-font-size', () => {
+    ipcMain.on("desktop-lyrics-font-size", () => {
         // 通知主窗口打开字体大小设置
         if (global.mainWindow) {
-            global.mainWindow.webContents.send('open-lyrics-font-settings');
+            global.mainWindow.webContents.send("open-lyrics-font-settings");
         }
     });
 
-    ipcMain.on('desktop-lyrics-settings', () => {
+    ipcMain.on("desktop-lyrics-settings", () => {
         // 通知主窗口打开桌面歌词设置
         if (global.mainWindow) {
-            global.mainWindow.webContents.send('open-lyrics-settings');
+            global.mainWindow.webContents.send("open-lyrics-settings");
             global.mainWindow.focus();
         }
     });
 
-    ipcMain.on('desktop-lyrics-close', () => {
+    ipcMain.on("desktop-lyrics-close", () => {
         if (desktopLyricsWindow) {
             desktopLyricsWindow.close();
             desktopLyricsWindow = null;
@@ -767,22 +788,20 @@ function setupIPC() {
     });
 
     // 强制同步歌词 - 这个新增的IPC处理器可以确保在主窗口状态变化时仍能同步歌词
-    ipcMain.on('force-sync-desktop-lyrics', () => {
+    ipcMain.on("force-sync-desktop-lyrics", () => {
         if (global.mainWindow && desktopLyricsWindow) {
-            global.mainWindow.webContents.send('request-lyrics-sync');
+            global.mainWindow.webContents.send("request-lyrics-sync");
         }
     });
 }
 
 // 防止应用程序休眠
-app.commandLine.appendSwitch('disable-renderer-backgrounding');
-app.commandLine.appendSwitch('disable-background-timer-throttling');
+app.commandLine.appendSwitch("disable-renderer-backgrounding");
+app.commandLine.appendSwitch("disable-background-timer-throttling");
 
 function setBilibiliRequestCookie(cookieString) {
     session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
-        if (details.url.includes("bilibili.com") ||
-            details.url.includes("bilivideo.cn") ||
-            details.url.includes("bilivideo.com")) {
+        if (details.url.includes("bilibili.com") || details.url.includes("bilivideo.cn") || details.url.includes("bilivideo.com") || details.url.includes("akamaized.net")) {
             details.requestHeaders["Cookie"] = cookieString;
             details.requestHeaders["referer"] = "https://www.bilibili.com/";
             details.requestHeaders["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3";
