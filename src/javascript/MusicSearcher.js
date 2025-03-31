@@ -69,7 +69,7 @@ class MusicSearcher {
                 order,
                 duration,
                 tids,
-                page  // 使用传入的页码
+                page // 使用传入的页码
             };
             const query = encWbi(params, img_key, sub_key);
             const response = await axios.get(`https://api.bilibili.com/x/web-interface/wbi/search/type?${query}`);
@@ -92,7 +92,10 @@ class MusicSearcher {
             const list = document.querySelector(".search-result .list");
 
             // 显示骨架屏加载效果 - 替换旧的加载动画
-            const skeletonItems = Array(6).fill('').map(() => `
+            const skeletonItems = Array(6)
+                .fill("")
+                .map(
+                    () => `
                 <div class="skeleton-item">
                     <div class="skeleton-poster shine"></div>
                     <div class="skeleton-info">
@@ -101,8 +104,10 @@ class MusicSearcher {
                     </div>
                     <div class="skeleton-actions shine"></div>
                 </div>
-            `).join('');
-            
+            `
+                )
+                .join("");
+
             list.innerHTML = `
                 <div class="skeleton-container">
                     ${skeletonItems}
@@ -199,7 +204,7 @@ class MusicSearcher {
             searchResults.forEach((song) => {
                 // 确保获取作者信息
                 const authorName = song.author || "未知艺术家";
-                
+
                 const div = this.uiManager.createSongElement(
                     {
                         title: song.title.replace(/<em class="keyword">|<\/em>/g, ""),
@@ -228,7 +233,7 @@ class MusicSearcher {
                             artist: authorName,
                             poster: "https:" + song.pic,
                             bvid: song.bvid,
-                            lyric: "等待获取歌词",
+                            lyric: "等待获取歌词"
                         };
                         await this.playlistManager.updateUIForCurrentSong(songInfo);
 
@@ -236,7 +241,7 @@ class MusicSearcher {
                         const playButton = document.querySelector(".control>.buttons>.play");
                         const progressBar = document.querySelector(".progress-bar-inner");
                         playButton.disabled = true;
-                        progressBar.classList.add('loading');
+                        progressBar.classList.add("loading");
 
                         // 获取音频URL等信息
                         const urls = await this.getAudioLink(song.bvid, true);
@@ -257,20 +262,17 @@ class MusicSearcher {
                             audio: url,
                             cid: urls[2],
                             video: videoUrl,
-                            lyric: await (this.settingManager.getSetting('lyricSearchType') === 'custom'
-                                ? this.showLyricSearchDialog(cleanTitle)
-                                : this.getLyrics(keyword, song.bvid, urls[2])) // 修改为传递bvid和cid
+                            lyric: await (this.settingManager.getSetting("lyricSearchType") === "custom" ? this.showLyricSearchDialog(cleanTitle) : this.getLyrics(keyword, song.bvid, urls[2])) // 修改为传递bvid和cid
                         };
 
                         // 恢复界面状态
-                        progressBar.classList.remove('loading');
+                        progressBar.classList.remove("loading");
                         playButton.disabled = false;
 
                         // 添加到播放列表并播放
                         this.playlistManager.addSong(newSong);
                         this.playlistManager.setPlayingNow(this.playlistManager.playlist.length - 1);
                         this.uiManager.renderPlaylist();
-
                     } catch (error) {
                         console.error("添加歌曲失败:", error);
                     }
@@ -279,36 +281,36 @@ class MusicSearcher {
             });
 
             // 创建分页控制
-            const paginationContainer = document.createElement('div');
-            paginationContainer.className = 'pagination';
+            const paginationContainer = document.createElement("div");
+            paginationContainer.className = "pagination";
 
             // 上一页按钮
             if (page > 1) {
-                const prevBtn = document.createElement('button');
-                prevBtn.className = 'pagination-btn';
+                const prevBtn = document.createElement("button");
+                prevBtn.className = "pagination-btn";
                 prevBtn.innerHTML = '<i class="bi bi-chevron-left"></i> 上一页';
                 prevBtn.onclick = () => this.searchMusic(keyword, page - 1);
                 paginationContainer.appendChild(prevBtn);
             }
 
             // 页码显示
-            const pageInfo = document.createElement('span');
-            pageInfo.className = 'page-info';
+            const pageInfo = document.createElement("span");
+            pageInfo.className = "page-info";
             pageInfo.textContent = `第 ${page} 页`;
             paginationContainer.appendChild(pageInfo);
 
             // 下一页按钮
-            const nextBtn = document.createElement('button');
-            nextBtn.className = 'pagination-btn';
+            const nextBtn = document.createElement("button");
+            nextBtn.className = "pagination-btn";
             nextBtn.innerHTML = '下一页 <i class="bi bi-chevron-right"></i>';
             nextBtn.onclick = () => this.searchMusic(keyword, page + 1);
             paginationContainer.appendChild(nextBtn);
 
             // 添加分页控制到搜索结果区域
             list.appendChild(paginationContainer);
-
         } catch (error) {
             console.error("搜索失败:", error);
+            // eslint-disable-next-line no-undef
             list.innerHTML = "搜索失败，请重试";
         }
     }
@@ -341,43 +343,44 @@ class MusicSearcher {
         }
 
         const bestAudio = audioStream[0];
+        console.log(bestAudio);
         return [bestAudio.baseUrl, bestAudio.backupUrl, cid];
     }
 
     async getLyrics(songName, bvid = null, cid = null, forceSource = null) {
         try {
             // 确定使用的歌词来源
-            const lyricSource = forceSource || this.settingManager.getSetting('lyricSource') || 'netease';
-            
+            const lyricSource = forceSource || this.settingManager.getSetting("lyricSource") || "netease";
+
             // 优先从缓存获取
-            if (lyricSource === 'bilibili' && bvid && cid && this.lyricsCache.bilibili[`${bvid}-${cid}`]) {
+            if (lyricSource === "bilibili" && bvid && cid && this.lyricsCache.bilibili[`${bvid}-${cid}`]) {
                 return this.lyricsCache.bilibili[`${bvid}-${cid}`];
-            } else if (lyricSource === 'netease' && songName && this.lyricsCache.netease[songName]) {
+            } else if (lyricSource === "netease" && songName && this.lyricsCache.netease[songName]) {
                 return this.lyricsCache.netease[songName];
             }
-            
+
             // 根据设置选择歌词来源
-            if (lyricSource === 'bilibili' && bvid && cid) {
+            if (lyricSource === "bilibili" && bvid && cid) {
                 try {
                     // 显示加载状态
                     this.showLoadingState(true);
-                    
+
                     const lyrics = await this.getBilibiliSubtitle(bvid, cid);
-                    
+
                     // 缓存结果
                     if (lyrics && lyrics !== "暂无歌词，尽情欣赏音乐") {
                         this.lyricsCache.bilibili[`${bvid}-${cid}`] = lyrics;
                     }
-                    
+
                     // 隐藏加载状态
                     this.showLoadingState(false);
-                    
+
                     return lyrics;
                 } catch (error) {
                     console.error("获取B站字幕失败，尝试网易云歌词", error);
                     // B站字幕获取失败，尝试网易云歌词
                     if (songName) {
-                        return this.getLyrics(songName, bvid, cid, 'netease');
+                        return this.getLyrics(songName, bvid, cid, "netease");
                     }
                     // 隐藏加载状态
                     this.showLoadingState(false);
@@ -387,7 +390,7 @@ class MusicSearcher {
                 try {
                     // 显示加载状态
                     this.showLoadingState(true);
-                    
+
                     const searchResponse = await search({
                         keywords: songName,
                         limit: 1
@@ -395,8 +398,8 @@ class MusicSearcher {
                     const searchResult = searchResponse.body;
                     if (!searchResult.result || !searchResult.result.songs || searchResult.result.songs.length === 0) {
                         // 网易云搜索失败，如果有B站视频ID，尝试B站字幕
-                        if (bvid && cid && lyricSource !== 'netease') {
-                            return this.getLyrics(songName, bvid, cid, 'bilibili');
+                        if (bvid && cid && lyricSource !== "netease") {
+                            return this.getLyrics(songName, bvid, cid, "bilibili");
                         }
                         // 隐藏加载状态
                         this.showLoadingState(false);
@@ -411,31 +414,31 @@ class MusicSearcher {
                         this.showLoadingState(false);
                         return "暂无歌词，尽情欣赏音乐";
                     }
-                    
+
                     const yrcLyrics = yrcResponse.body;
                     const lyrics = yrcLyrics.yrc ? yrcLyrics.yrc.lyric : yrcLyrics.lrc ? yrcLyrics.lrc.lyric : "暂无歌词，尽情欣赏音乐";
-                    
+
                     // 缓存结果
                     if (lyrics && lyrics !== "暂无歌词，尽情欣赏音乐") {
                         this.lyricsCache.netease[songName] = lyrics;
                     }
-                    
+
                     // 隐藏加载状态
                     this.showLoadingState(false);
-                    
+
                     return lyrics;
                 } catch (error) {
                     console.error("获取网易云歌词失败", error);
                     // 网易云歌词获取失败，如果有B站视频ID，尝试B站字幕
-                    if (bvid && cid && lyricSource !== 'netease') {
-                        return this.getLyrics(songName, bvid, cid, 'bilibili');
+                    if (bvid && cid && lyricSource !== "netease") {
+                        return this.getLyrics(songName, bvid, cid, "bilibili");
                     }
                     // 隐藏加载状态
                     this.showLoadingState(false);
                     return "暂无歌词，尽情欣赏音乐";
                 }
             }
-            
+
             // 隐藏加载状态
             this.showLoadingState(false);
             return "暂无歌词，尽情欣赏音乐";
@@ -446,43 +449,41 @@ class MusicSearcher {
             return "暂无歌词，尽情欣赏音乐";
         }
     }
-    
+
     // 新增：获取B站字幕
     async getBilibiliSubtitle(bvid, cid) {
         try {
             // 构建API请求
             const url = `https://api.bilibili.com/x/player/wbi/v2?bvid=${bvid}&cid=${cid}`;
-            
+
             // 发送请求
             const response = await axios.get(url);
-            
+
             // 检查请求是否成功
             if (response.data.code !== 0) {
                 throw new Error(`获取B站字幕失败：${response.data.message}`);
             }
-            
+
             // 提取字幕信息
             const { subtitle } = response.data.data;
-            
+
             // 如果没有字幕
             if (!subtitle || !subtitle.list || subtitle.list.length === 0) {
                 return "暂无歌词，尽情欣赏音乐";
             }
-            
+
             // 获取字幕列表中的第一个字幕
             const firstSubtitle = subtitle.list[0];
-            
+
             // 获取字幕文件的URL
             const subtitleUrl = firstSubtitle.subtitle_url;
-            
+
             // 如果URL以http://开头，需要转换为https://
-            const secureUrl = subtitleUrl.startsWith('http://') 
-                ? subtitleUrl.replace('http://', 'https://')
-                : subtitleUrl;
-                
+            const secureUrl = subtitleUrl.startsWith("http://") ? subtitleUrl.replace("http://", "https://") : subtitleUrl;
+
             // 获取字幕文件内容
             const subtitleResponse = await axios.get(secureUrl);
-            
+
             // 将字幕格式转换为歌词格式
             return this.convertSubtitleToLyrics(subtitleResponse.data);
         } catch (error) {
@@ -490,32 +491,34 @@ class MusicSearcher {
             throw error;
         }
     }
-    
+
     // 新增：将B站字幕格式转换为歌词格式
     convertSubtitleToLyrics(subtitleData) {
         // B站字幕通常是JSON格式，包含body字段，每个元素有from(开始时间)、to(结束时间)和content(内容)
         if (!subtitleData || !subtitleData.body || !Array.isArray(subtitleData.body) || subtitleData.body.length === 0) {
             return "暂无歌词，尽情欣赏音乐";
         }
-        
+
         // 排序字幕，确保按时间顺序
         const sortedSubtitles = subtitleData.body.sort((a, b) => a.from - b.from);
-        
+
         // 转换为LRC格式
-        return sortedSubtitles.map(item => {
-            // 转换秒为分:秒.毫秒格式
-            const minutes = Math.floor(item.from / 60);
-            const seconds = Math.floor(item.from % 60);
-            const milliseconds = Math.floor((item.from % 1) * 100);
-            
-            // 格式化时间标签：[mm:ss.xx]
-            const timeTag = `[${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}.${milliseconds.toString().padStart(2, '0')}]`;
-            
-            // 返回带时间标签的歌词行
-            return `${timeTag}${item.content}`;
-        }).join('\n');
+        return sortedSubtitles
+            .map((item) => {
+                // 转换秒为分:秒.毫秒格式
+                const minutes = Math.floor(item.from / 60);
+                const seconds = Math.floor(item.from % 60);
+                const milliseconds = Math.floor((item.from % 1) * 100);
+
+                // 格式化时间标签：[mm:ss.xx]
+                const timeTag = `[${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}.${milliseconds.toString().padStart(2, "0")}]`;
+
+                // 返回带时间标签的歌词行
+                return `${timeTag}${item.content}`;
+            })
+            .join("\n");
     }
-    
+
     // 新增：显示/隐藏加载状态
     showLoadingState(isLoading) {
         // 在实际项目中，这个方法会被替换为真实实现
@@ -524,9 +527,9 @@ class MusicSearcher {
             const progressBar = document.querySelector(".progress-bar-inner");
             if (progressBar) {
                 if (isLoading) {
-                    progressBar.classList.add('loading');
+                    progressBar.classList.add("loading");
                 } else {
-                    progressBar.classList.remove('loading');
+                    progressBar.classList.remove("loading");
                 }
             }
         }
@@ -541,26 +544,26 @@ class MusicSearcher {
                     if (cidResponse.data.code === 0) {
                         cid = cidResponse.data.data.cid;
                     }
-                    
+
                     if (!cid) {
-                        throw new Error('无法获取视频CID');
+                        throw new Error("无法获取视频CID");
                     }
                 } catch (error) {
-                    console.error('获取CID失败:', error);
-                    throw new Error('获取视频信息失败');
+                    console.error("获取CID失败:", error);
+                    throw new Error("获取视频信息失败");
                 }
             }
-            
+
             // 获取用户设置的视频清晰度，默认为720P
             let quality = 64; // 默认720P
-            
+
             if (this.settingManager) {
-                quality = this.settingManager.getSetting('videoQuality') || 64;
+                quality = this.settingManager.getSetting("videoQuality") || 64;
             }
-            
+
             // 根据清晰度判断是否启用4K和其他高级功能
             const fourk = quality >= 120 ? 1 : 0;
-            
+
             // 设置fnval，根据需要的功能组合不同的值
             let fnval = 16; // 基本DASH格式
             if (quality === 125) {
@@ -576,7 +579,7 @@ class MusicSearcher {
             });
 
             if (!response.ok) {
-                throw new Error('获取视频URL失败');
+                throw new Error("获取视频URL失败");
             }
 
             const data = await response.json();
@@ -595,10 +598,10 @@ class MusicSearcher {
                 if (data.data.durl && data.data.durl.length > 0) {
                     return data.data.durl[0].url;
                 }
-                throw new Error('无可用视频流');
+                throw new Error("无可用视频流");
             }
         } catch (error) {
-            console.error('获取B站视频URL失败:', error);
+            console.error("获取B站视频URL失败:", error);
             return null;
         }
     }
@@ -607,7 +610,7 @@ class MusicSearcher {
     selectBestVideoStream(videoStreams, preferredQuality) {
         // 首先按质量(id)降序排序
         videoStreams.sort((a, b) => b.id - a.id);
-        
+
         // 找出不超过用户设置清晰度的最高质量流
         for (let stream of videoStreams) {
             // 如果流的质量小于等于用户首选质量，选择它
@@ -615,23 +618,23 @@ class MusicSearcher {
                 return stream.baseUrl || stream.base_url;
             }
         }
-        
+
         // 如果没找到合适的，返回可用的最高质量
         return videoStreams[0].baseUrl || videoStreams[0].base_url;
     }
 
     async showLyricSearchDialog(songTitle) {
         return new Promise((resolve) => {
-            const dialog = document.getElementById('lyricSearchDialog');
-            const titleDiv = document.getElementById('currentSongTitle');
-            const keywordInput = document.getElementById('lyricKeyword');
-            const skipBtn = document.getElementById('skipLyric');
-            const confirmBtn = document.getElementById('confirmLyric');
+            const dialog = document.getElementById("lyricSearchDialog");
+            const titleDiv = document.getElementById("currentSongTitle");
+            const keywordInput = document.getElementById("lyricKeyword");
+            const skipBtn = document.getElementById("skipLyric");
+            const confirmBtn = document.getElementById("confirmLyric");
 
             // 显示当前歌曲信息
             titleDiv.textContent = songTitle;
             keywordInput.value = songTitle;
-            dialog.classList.remove('hide');
+            dialog.classList.remove("hide");
 
             const handleSkip = () => {
                 cleanup();
@@ -654,23 +657,23 @@ class MusicSearcher {
             };
 
             const handleKeydown = (e) => {
-                if (e.key === 'Enter') {
+                if (e.key === "Enter") {
                     handleConfirm();
-                } else if (e.key === 'Escape') {
+                } else if (e.key === "Escape") {
                     handleSkip();
                 }
             };
 
             const cleanup = () => {
-                dialog.classList.add('hide');
-                skipBtn.removeEventListener('click', handleSkip);
-                confirmBtn.removeEventListener('click', handleConfirm);
-                keywordInput.removeEventListener('keydown', handleKeydown);
+                dialog.classList.add("hide");
+                skipBtn.removeEventListener("click", handleSkip);
+                confirmBtn.removeEventListener("click", handleConfirm);
+                keywordInput.removeEventListener("keydown", handleKeydown);
             };
 
-            skipBtn.addEventListener('click', handleSkip);
-            confirmBtn.addEventListener('click', handleConfirm);
-            keywordInput.addEventListener('keydown', handleKeydown);
+            skipBtn.addEventListener("click", handleSkip);
+            confirmBtn.addEventListener("click", handleConfirm);
+            keywordInput.addEventListener("keydown", handleKeydown);
 
             // 聚焦输入框
             keywordInput.focus();
