@@ -6,7 +6,11 @@
   gap: 5px;
   padding: 8px 12px;
   border-radius: 8px;
-  transition: background-color 0.2s ease;
+  transition: transform 0.3s var(--animation-timing-bounce),
+              background-color 0.2s ease,
+              box-shadow 0.3s ease,
+              border-left 0.3s ease,
+              padding-left 0.3s ease;
   backdrop-filter: blur(2px) saturate(2);
   -webkit-backdrop-filter: blur(2px) saturate(2);
   will-change: transform, opacity;
@@ -21,7 +25,13 @@
 }
 
 .song:hover {
-  background-color: var(--border-1);
+  transform: translateY(-2px);
+  background-color: var(--rgba-14);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.08);
+}
+
+.song:active {
+  transform: scale(0.98);
 }
 
 .song .poster {
@@ -101,6 +111,19 @@
   animation: controlsAppear 0.3s var(--animation-timing-bounce) forwards;
 }
 
+.song .controls > div {
+  transition: transform 0.2s var(--animation-timing-bounce),
+              opacity 0.2s ease;
+}
+
+.song .controls > div:hover {
+  transform: scale(1.2);
+}
+
+.song .controls > div:active {
+  transform: scale(0.9);
+}
+
 @keyframes controlsAppear {
   from {
     transform: translateX(-10px);
@@ -147,58 +170,59 @@
 }
 
 #playing-list .song.adding {
-  opacity: 0;
-  transform: translateY(20px) scale(0.95);
-  max-height: 0;
-  margin: 0;
-  padding: 0;
-  filter: blur(3px);
+  animation: song-add 0.5s var(--animation-timing-bounce);
 }
 
 #playing-list .song.removing {
-  opacity: 0;
-  transform: scale(0.92) rotate(-1deg);
-  max-height: 0;
-  margin: 0;
-  padding: 0;
-  filter: blur(2px);
+  animation: song-remove 0.5s var(--animation-timing) forwards;
+}
+
+@keyframes song-add {
+  0% { opacity: 0; transform: translateY(20px); }
+  100% { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes song-remove {
+  0% { opacity: 1; transform: translateX(0); }
+  100% { opacity: 0; transform: translateX(-30px); }
 }
 
 #playing-list .song.playing {
-  background: linear-gradient(90deg,
-      rgba(var(--theme-1), 0.5),
-      rgba(var(--theme-2), 0.5));
+  background-color: var(--rgba-15);
+  border-left: 3px solid var(--theme-1);
+  padding-left: calc(var(--padding) - 3px);
   position: relative;
 }
 
-#playing-list .song.playing::before {
+#playing-list .song.playing::after {
   content: '';
   position: absolute;
-  left: 0;
   top: 0;
+  left: 0;
+  width: 100%;
   height: 100%;
-  width: 3px;
-  background: linear-gradient(0deg, var(--theme-1), var(--theme-2));
-  animation: playingPulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
-}
-
-@keyframes playingPulse {
-  0% {
-    opacity: 0.6;
-  }
-
-  50% {
-    opacity: 1;
-  }
-
-  100% {
-    opacity: 0.6;
-  }
+  background: linear-gradient(90deg, 
+    rgba(var(--theme-1-rgb), 0.05), 
+    transparent 20%);
+  pointer-events: none;
 }
 
 #playing-list .song.fade-out {
-  opacity: 0.4;
-  transform: scale(0.98);
+  animation: song-fade-out 0.3s ease forwards;
+}
+
+.song.fade-in {
+  animation: song-fade-in 0.4s var(--animation-timing-bounce) forwards;
+}
+
+@keyframes song-fade-in {
+  from { opacity: 0.5; transform: translateY(5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes song-fade-out {
+  from { opacity: 1; transform: translateY(0); }
+  to { opacity: 0.5; transform: translateY(-5px); }
 }
 
 .song.playing {

@@ -320,37 +320,49 @@ class PlaylistManager {
         // 更新歌词
         this.lyricsPlayer.changeLyrics(song.lyric);
 
-        // 更新播放列表UI
+        // 更新播放列表UI，添加平滑切换动画
         const oldPlayingElement = document.querySelector("#playing-list .song.playing");
         const newPlayingElement = document.querySelector(`#playing-list .song[data-bvid="${song.bvid}"]`);
 
         if (oldPlayingElement) {
-            oldPlayingElement.style.transition = 'all 0.3s ease';
-            oldPlayingElement.classList.remove("playing");
+            // 应用淡出动画类
             oldPlayingElement.classList.add("fade-out");
+            // 延迟移除播放类，确保动画完成
+            setTimeout(() => {
+                oldPlayingElement.classList.remove("playing", "fade-out");
+            }, 300);
         }
 
         if (newPlayingElement) {
-            newPlayingElement.classList.add("playing");
-            newPlayingElement.classList.add("flash");
+            // 应用淡入动画类
+            newPlayingElement.classList.add("playing", "fade-in");
+            // 滚动到视图，使用平滑滚动
             newPlayingElement.scrollIntoView({
                 behavior: 'smooth',
                 block: 'center'
             });
+            // 添加闪光效果
+            newPlayingElement.classList.add("flash");
             setTimeout(() => {
-                newPlayingElement.classList.remove("flash");
+                // 移除临时动画类
+                newPlayingElement.classList.remove("flash", "fade-in");
             }, 800);
         }
 
-        // 更新封面图片
+        // 更新封面图片，添加缓动切换
         const coverImg = document.querySelector(".player-content .cover .cover-img");
+        coverImg.style.transition = 'opacity 0.3s ease';
         coverImg.style.opacity = '0';
 
+        // 延迟更新内容，创造平滑过渡
         setTimeout(() => {
+            // 更新信息
             this.updateUIForCurrentSong(song);
+            // 淡入新封面
             coverImg.style.opacity = '1';
         }, 300);
     }
+
     async tryPlayWithRetry(song, maxRetries = 2) {
         let lastError;
         const playButton = document.querySelector(".control>.buttons>.play");

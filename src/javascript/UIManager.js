@@ -30,7 +30,8 @@ class UIManager {
         this.initializeSearchSuggestions();
         this.initializeCustomSelects();
         this.initializeWelcomeDialog();
-        this.initializeTrayControls(); // 新增托盘控制初始化
+        this.initializeTrayControls();
+        this.initializeAnimations(); // 新增动画初始化
         this.autoMaximize();
     }
     initializeSearchSuggestions() {
@@ -945,16 +946,19 @@ class UIManager {
         // 6. 如果不是进度通知，3秒后自动移除
         if (!showProgress) {
             setTimeout(() => {
-                notification.classList.add("fade-out");
-                setTimeout(() => {
+                notification.classList.add("notification-fadeout");
+                notification.addEventListener('animationend', () => {
                     notification.remove();
                     // 如果容器为空则移除容器
                     if (!container.children.length) {
                         container.remove();
                     }
-                }, 300);
+                }, { once: true });
             }, 3000);
         }
+
+        // 添加动画类
+        notification.classList.add('animate-notification');
 
         return notification;
     }
@@ -1276,6 +1280,349 @@ class UIManager {
             ipcRenderer.send("window-maximize", "maximize");
         } else {
             ipcRenderer.send("window-maximize", "unmaximize");
+        }
+    }
+
+    // 添加全局动画初始化方法
+    initializeAnimations() {
+        // 为所有按钮添加点击波纹效果
+        document.querySelectorAll('button:not(.mica), .btn, .import-btn, [data-action]').forEach(button => {
+            button.addEventListener('click', this.addClickRipple);
+        });
+        
+        // 为所有卡片添加悬停动画
+        document.querySelectorAll('.card').forEach(card => {
+            if (!card.classList.contains('mica')) {
+                card.classList.add('animate-card');
+            }
+        });
+        
+        // 为列表项添加交互动画
+        document.querySelectorAll('.song, #playlistList li, #songList li').forEach((item, index) => {
+            // 添加错落有致的加载动画
+            if (!item.classList.contains('mica')) {
+                item.style.opacity = '0';
+                item.style.transform = 'translateY(20px)';
+                
+                setTimeout(() => {
+                    item.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
+                    item.style.opacity = '1';
+                    item.style.transform = 'translateY(0)';
+                }, 50 + index * 30); // 错开加载时间
+            }
+        });
+        
+        // 为标题栏添加动画
+        const titbar = document.querySelector('.titbar');
+        if (titbar) {
+            titbar.classList.add('animate-fadeIn');
+        }
+        
+        // 为所有页面设置过渡动画
+        document.querySelectorAll('.content > div').forEach(page => {
+            page.classList.add('page-transition');
+        });
+        
+        // 监听音频状态变化添加动画
+        if (this.audioPlayer && this.audioPlayer.audio) {
+            this.audioPlayer.audio.addEventListener('play', () => {
+                const playButton = document.querySelector('.play');
+                if (playButton) {
+                    playButton.classList.add('animate-play');
+                    setTimeout(() => playButton.classList.remove('animate-play'), 500);
+                }
+                
+                const cover = document.querySelector('.cover-img');
+                if (cover) {
+                    cover.classList.add('rotate-animation');
+                }
+            });
+            
+            this.audioPlayer.audio.addEventListener('pause', () => {
+                const playButton = document.querySelector('.play');
+                if (playButton) {
+                    playButton.classList.add('animate-pause');
+                    setTimeout(() => playButton.classList.remove('animate-pause'), 500);
+                }
+                
+                const cover = document.querySelector('.cover-img');
+                if (cover) {
+                    cover.classList.remove('rotate-animation');
+                }
+            });
+        }
+
+        // 增强播放器交互控件
+        this.enhancePlayerControls();
+    }
+    
+    // 添加点击波纹效果函数
+    addClickRipple(e) {
+        // 避免为带有毛玻璃效果的元素添加动画
+        if (this.classList.contains('mica')) return;
+        
+        const rect = this.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        
+        const ripple = document.createElement('span');
+        ripple.className = 'ripple-effect';
+        ripple.style.left = `${x}px`;
+        ripple.style.top = `${y}px`;
+        
+        this.appendChild(ripple);
+        
+        setTimeout(() => {
+            ripple.remove();
+        }, 600); // 等待动画完成
+    }
+
+    // 为播放器添加增强交互动画
+    enhancePlayerControls() {
+        // 添加时间预览提示功能
+        const progressBar = document.querySelector('.player .control .progress .progress-bar');
+        
+        if (progressBar) {
+            // 创建时间预览元素
+            const timePreview = document.createElement('div');
+            timePreview.className = 'progress-time-preview';
+            progressBar.appendChild(timePreview);
+            
+            // 监听鼠标移动
+            progressBar.addEventListener('mousemove', (e) => {
+                const rect = progressBar.getBoundingClientRect();
+                const percent = (e.clientX - rect.left) / rect.width;
+                const duration = this.audioPlayer.audio.duration || 0;
+                const time = duration * percent;
+                
+                // 更新时间预览位置和内容
+                timePreview.style.left = `${e.clientX - rect.left}px`;
+                timePreview.textContent = this.formatTime(time);
+            });
+            
+            // 监听鼠标按下和移动
+            let isDragging = false;
+            
+            progressBar.addEventListener('mousedown', () => {
+                isDragging = true;
+                document.body.classList.add('seeking');
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isDragging) return;
+                
+                const rect = progressBar.getBoundingClientRect();
+                const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+                const duration = this.audioPlayer.audio.duration || 0;
+                
+                // 更新进度条位置
+                const progressBarInner = progressBar.querySelector('.progress-bar-inner');
+                if (progressBarInner) {
+                    progressBarInner.style.width = `${percent * 100}%`;
+                }
+                
+                // 更新播放时间显示
+                const currentTimeEl = document.querySelector('.player .control .time .currentTime');
+                if (currentTimeEl) {
+                    currentTimeEl.textContent = this.formatTime(duration * percent);
+                }
+            });
+            
+            document.addEventListener('mouseup', () => {
+                if (isDragging) {
+                    isDragging = false;
+                    document.body.classList.remove('seeking');
+                }
+            });
+            
+            // 点击进度条快速跳转
+            progressBar.addEventListener('click', (e) => {
+                const rect = progressBar.getBoundingClientRect();
+                const percent = (e.clientX - rect.left) / rect.width;
+                
+                if (this.audioPlayer && this.audioPlayer.audio) {
+                    // 触发跳转动画
+                    progressBar.classList.add('clicked');
+                    setTimeout(() => progressBar.classList.remove('clicked'), 300);
+                    
+                    // 设置音频时间
+                    this.audioPlayer.audio.currentTime = percent * this.audioPlayer.audio.duration;
+                }
+            });
+        }
+        
+        // 增强音量控制功能
+        const volumeControl = document.querySelector('.player .control .buttons .volume');
+        
+        if (volumeControl) {
+            // 创建音量滑块
+            const volumeSlider = document.createElement('div');
+            volumeSlider.className = 'volume-slider';
+            
+            const volumeBar = document.createElement('div');
+            volumeBar.className = 'volume-bar';
+            
+            const volumeLevel = document.createElement('div');
+            volumeLevel.className = 'volume-level';
+            
+            const volumeHandle = document.createElement('div');
+            volumeHandle.className = 'volume-handle';
+            
+            volumeBar.appendChild(volumeLevel);
+            volumeLevel.appendChild(volumeHandle);
+            volumeSlider.appendChild(volumeBar);
+            volumeControl.appendChild(volumeSlider);
+            
+            // 更新初始音量显示
+            if (this.audioPlayer && this.audioPlayer.audio) {
+                const currentVolume = this.audioPlayer.audio.volume * 100;
+                volumeLevel.style.height = `${currentVolume}%`;
+                volumeHandle.style.bottom = `${currentVolume}%`;
+                
+                // 根据音量状态更新图标和静音标记
+                const volumeIcon = volumeControl.querySelector('i');
+                if (volumeIcon) {
+                    if (this.audioPlayer.audio.volume === 0) {
+                        volumeControl.classList.add('muted');
+                        volumeIcon.className = 'bi bi-volume-mute-fill';
+                    } else {
+                        volumeControl.classList.remove('muted');
+                        if (this.audioPlayer.audio.volume < 0.3) {
+                            volumeIcon.className = 'bi bi-volume-off-fill';
+                        } else if (this.audioPlayer.audio.volume < 0.7) {
+                            volumeIcon.className = 'bi bi-volume-down-fill';
+                        } else {
+                            volumeIcon.className = 'bi bi-volume-up-fill';
+                        }
+                    }
+                }
+            }
+            
+            // 监听音量滑块点击和拖动
+            let isDraggingVolume = false;
+            
+            volumeBar.addEventListener('mousedown', (e) => {
+                isDraggingVolume = true;
+                updateVolumeFromEvent(e);
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (!isDraggingVolume) return;
+                updateVolumeFromEvent(e);
+            });
+            
+            document.addEventListener('mouseup', () => {
+                isDraggingVolume = false;
+            });
+            
+            // 点击音量图标切换静音
+            volumeControl.querySelector('i').addEventListener('click', (e) => {
+                e.stopPropagation();
+                
+                if (this.audioPlayer && this.audioPlayer.audio) {
+                    const wasMuted = this.audioPlayer.audio.volume === 0;
+                    
+                    // 保存当前音量
+                    const lastVolume = parseFloat(volumeControl.getAttribute('data-last-volume') || '100');
+                    
+                    if (wasMuted) {
+                        // 恢复上次的音量
+                        this.audioPlayer.audio.volume = lastVolume / 100;
+                        this.settingManager.setSetting('volume', lastVolume);
+                    } else {
+                        // 保存当前音量并静音
+                        volumeControl.setAttribute('data-last-volume', Math.round(this.audioPlayer.audio.volume * 100).toString());
+                        this.audioPlayer.audio.volume = 0;
+                        this.settingManager.setSetting('volume', '0');
+                    }
+                    
+                    // 更新UI
+                    updateVolumeUI();
+                }
+            });
+            
+            // 从事件更新音量
+            const updateVolumeFromEvent = (e) => {
+                const rect = volumeBar.getBoundingClientRect();
+                let percent = 1 - (e.clientY - rect.top) / rect.height;
+                percent = Math.max(0, Math.min(1, percent));
+                
+                if (this.audioPlayer && this.audioPlayer.audio) {
+                    // 设置音频音量
+                    this.audioPlayer.audio.volume = percent;
+                    
+                    // 更新设置
+                    this.settingManager.setSetting('volume', Math.round(percent * 100).toString());
+                    
+                    // 更新UI
+                    updateVolumeUI();
+                }
+            };
+            
+            // 更新音量UI
+            const updateVolumeUI = () => {
+                if (!this.audioPlayer || !this.audioPlayer.audio) return;
+                
+                const volume = this.audioPlayer.audio.volume;
+                const percent = volume * 100;
+                
+                // 更新滑块位置
+                volumeLevel.style.height = `${percent}%`;
+                volumeHandle.style.bottom = `${percent}%`;
+                
+                // 更新图标
+                const volumeIcon = volumeControl.querySelector('i');
+                if (volumeIcon) {
+                    if (volume === 0) {
+                        volumeControl.classList.add('muted');
+                        volumeIcon.className = 'bi bi-volume-mute-fill';
+                    } else {
+                        volumeControl.classList.remove('muted');
+                        if (volume < 0.3) {
+                            volumeIcon.className = 'bi bi-volume-off-fill';
+                        } else if (volume < 0.7) {
+                            volumeIcon.className = 'bi bi-volume-down-fill';
+                        } else {
+                            volumeIcon.className = 'bi bi-volume-up-fill';
+                        }
+                    }
+                }
+            };
+        }
+        
+        // 增强专辑封面动画
+        const coverImg = document.querySelector('.player-content .cover .cover-img');
+        
+        if (coverImg && this.audioPlayer) {
+            // 当播放状态改变时，更新专辑旋转状态
+            this.audioPlayer.audio.addEventListener('play', () => {
+                coverImg.classList.add('playing');
+                coverImg.classList.remove('paused');
+            });
+            
+            this.audioPlayer.audio.addEventListener('pause', () => {
+                coverImg.classList.add('paused');
+            });
+        }
+        
+        // 歌曲切换时的动画效果
+        if (this.playlistManager) {
+            const originalSetPlayingNow = this.playlistManager.setPlayingNow;
+            
+            this.playlistManager.setPlayingNow = async function(index, replay = true, autoPlay = true) {
+                // 添加歌曲切换类
+                document.body.classList.add('song-changing');
+                
+                // 调用原始方法
+                const result = await originalSetPlayingNow.call(this, index, replay, autoPlay);
+                
+                // 延迟移除类名，以确保动画完成
+                setTimeout(() => {
+                    document.body.classList.remove('song-changing');
+                }, 500);
+                
+                return result;
+            };
         }
     }
 }

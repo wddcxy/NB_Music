@@ -69,6 +69,19 @@
         width: 100%;
     }
 
+    body.mobile-view .titbar > .search.expanded {
+        animation: expandSearch 0.3s var(--animation-timing-bounce) forwards;
+    }
+
+    @keyframes expandSearch {
+        from {
+            width: 40px;
+        }
+        to {
+            width: 80%;
+        }
+    }
+
     /* 内容区域布局调整 */
     body.mobile-view .mica {
         display: block;
@@ -174,6 +187,17 @@
         pointer-events: auto; /* 确保可点击 */
     }
 
+    .page-indicator .dot {
+        transition: transform 0.3s var(--animation-timing-bounce),
+                    background-color 0.3s ease,
+                    width 0.3s var(--animation-timing-bounce);
+    }
+    
+    .page-indicator .dot.active {
+        transform: scale(1.2);
+        width: 24px;
+    }
+
     /* 移动设备上桌面歌词按钮位置调整 */
     body.mobile-view .desktop-lyrics-toggle {
         top: auto;
@@ -223,7 +247,7 @@
         }
     }
 
-    /* 移动端底部导航栏 */
+    /* 移动导航栏动画 */
     .mobile-navbar {
         position: fixed;
         bottom: 0;
@@ -238,6 +262,18 @@
         justify-content: space-around;
         align-items: center;
         z-index: 100;
+        animation: slideUp 0.5s var(--animation-timing-bounce) forwards;
+    }
+
+    @keyframes slideUp {
+        from {
+            transform: translateY(100%);
+            opacity: 0;
+        }
+        to {
+            transform: translateY(0);
+            opacity: 1;
+        }
     }
 
     .mobile-navbar a {
@@ -252,6 +288,7 @@
         position: relative;
         height: 100%;
         padding: 0 15px;
+        overflow: hidden;
     }
 
     .mobile-navbar a i {
@@ -295,6 +332,30 @@
 
     .mobile-navbar a.active::before {
         width: 30px;
+    }
+
+    .mobile-navbar a:active::after {
+        content: '';
+        display: block;
+        position: absolute;
+        width: 100%;
+        height: 100%;
+        top: 0;
+        left: 0;
+        background: rgba(var(--theme-1-rgb), 0.2);
+        border-radius: 50%;
+        animation: touchFeedback 0.4s ease-out;
+    }
+
+    @keyframes touchFeedback {
+        0% {
+            transform: scale(0);
+            opacity: 0.7;
+        }
+        100% {
+            transform: scale(1.5);
+            opacity: 0;
+        }
     }
 
     .mobile-navbar .playlist-toggle .count {
@@ -347,7 +408,9 @@
         z-index: 101;
         border-top: 1px solid var(--border-1);
         box-shadow: 0 -5px 20px rgba(0, 0, 0, 0.15);
-        transition: transform 0.3s cubic-bezier(0.2, 0.8, 0.2, 1), height 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+        transition: transform 0.4s var(--animation-timing-bounce),
+                    opacity 0.3s ease,
+                    height 0.3s var(--animation-timing);
         transform: translateY(100%);
         max-height: 80vh;
     }
@@ -355,6 +418,16 @@
     .mobile-playlist.open {
         transform: translateY(0);
         height: 50vh;
+        animation: slideUpPlaylist 0.4s var(--animation-timing-bounce) forwards;
+    }
+
+    @keyframes slideUpPlaylist {
+        from {
+            transform: translateY(100%);
+        }
+        to {
+            transform: translateY(0);
+        }
     }
 
     /* 关闭指示器 */
@@ -382,6 +455,30 @@
         border-radius: 3px;
         margin: 8px auto;
         cursor: grab;
+    }
+
+    .playlist-drag-handle::after {
+        content: '';
+        position: absolute;
+        width: 36px;
+        height: 4px;
+        background: var(--rgba-9);
+        border-radius: 2px;
+        top: 8px;
+        left: 50%;
+        transform: translateX(-50%);
+        animation: handlePulse 2s infinite;
+    }
+
+    @keyframes handlePulse {
+        0%, 100% {
+            opacity: 0.5;
+            width: 36px;
+        }
+        50% {
+            opacity: 0.8;
+            width: 44px;
+        }
     }
 
     .mobile-playlist-header {
@@ -427,6 +524,37 @@
 
     .mobile-playlist-content .song:active::after {
         background-color: var(--hover);
+    }
+
+    /* 播放器页面视图切换动画 */
+    .player.show-player {
+        animation: fadeInRight 0.4s var(--animation-timing-bounce) forwards;
+    }
+
+    .player.show-lyrics {
+        animation: fadeInLeft 0.4s var(--animation-timing-bounce) forwards;
+    }
+
+    @keyframes fadeInRight {
+        from {
+            opacity: 0.5;
+            transform: translateX(-30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
+    }
+
+    @keyframes fadeInLeft {
+        from {
+            opacity: 0.5;
+            transform: translateX(30px);
+        }
+        to {
+            opacity: 1;
+            transform: translateX(0);
+        }
     }
 
     /* 其他页面的移动端调整 */
