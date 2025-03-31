@@ -45,8 +45,11 @@ class MusiclistManager {
             console.log(link);
             const downloadPath = await ipcRenderer.invoke("get-download-path");
             const data = { folder: path.join(downloadPath, "NB-Music", name), link: link, name: item.title, bvid: item.bvid };
-            if (!fs.existsSync(path.join(downloadPath, "NB-Music", name))) {
-                fs.mkdirSync(path.join(downloadPath, "NB-Music", name));
+            if (!fs.existsSync(path.join(downloadPath, "NB-Music"))) {
+                fs.mkdirSync(path.join(downloadPath, "NB-Music"));
+            }
+            if (!fs.existsSync(data.folder)) {
+                fs.mkdirSync(data.folder);
             }
             try {
                 let response = await axios({
@@ -66,7 +69,7 @@ class MusiclistManager {
                 await fs.promises.writeFile(path.join(data.folder, data.name.replace(/[<>:"/\\|?*]+/g, "_") + ".m4s"), buffer);
             } finally {
                 importNotification.querySelector(".notification-message").textContent = `正在下载音乐: ${++i}/${songs.length}`;
-                importNotification.querySelector(".notification-progress-inner").style.width = `${i / songs.length * 100}%`;
+                importNotification.querySelector(".notification-progress-inner").style.width = `${(i / songs.length) * 100}%`;
                 if (i == songs.length) {
                     window.setTimeout(() => {
                         importNotification.remove();
