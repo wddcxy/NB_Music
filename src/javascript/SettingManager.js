@@ -4,66 +4,42 @@ class SettingManager {
     // 默认值常量
     static DEFAULT_PRIMARY_COLOR = "#ad6eca";
     static DEFAULT_SECONDARY_COLOR = "#3b91d8";
-    static DEFAULT_MICA_OPACITY = 0.5;
     static DEFAULT_FONT_FAMILY_CUSTOM = "HarmonyOS_Sans";
     static DEFAULT_FONT_FAMILY_FALLBACK = "-apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell";
-    static DEFAULT_VOLUME = 50; // 新增：默认音量50dB
+
     static DEFAULT_VALUES = {
-        // 默认音量为50%
-        volume: "50",
-        
-        // 默认启用歌词
-        lyricsEnabled: "true",
-        
-        // 默认启用循环歌词同步
-        loopLyricsEnabled: "true",
-        
-        // 默认禁用开发者工具
-        devToolsEnabled: "false",
-        
-        // 默认背景为封面
-        background: "cover",
-        
-        // 默认启用缓存
-        cacheEnabled: "true",
-        
-        // 默认关闭淡入淡出效果
-        fadeEnabled: "false",
-        
-        // 默认自动解析视频标题
-        extractTitle: "true",
-        
-        // 默认不启用桌面歌词
-        desktopLyricsEnabled: "false",
-        
-        // 默认禁用启动时自动播放
-        autoPlayOnStartup: "false"
+        theme: "dark",
+        hideSidebar: false,
+        hideTitbar: false,
+        primaryColor: SettingManager.DEFAULT_PRIMARY_COLOR, // 默认主色
+        secondaryColor: SettingManager.DEFAULT_SECONDARY_COLOR, // 默认次色
+        micaOpacity: 0.5, // 默认Mica透明度
+        background: "video",
+        autoMaximize: false,
+
+        fontFamilyCustom: SettingManager.DEFAULT_FONT_FAMILY_CUSTOM,
+        lyricLineFontSize: 24,
+
+        lyricsEnabled: true,
+        lyricSource: "netease", // 歌词来源 默认使用网易云
+        autoPlayOnStartup: false, // 自动播放
+        loopLyricsEnabled: true, // 循环歌单歌词同步功能 默认开启
+        desktopLyricsEnabled: false,
+        fadeEnabled: true, // 音频淡入淡出效果
+
+        lyricSearchType: "custom",
+        extractTitle: "auto",
+        videoQuality: 64, // 背景视频清晰度 默认720P
+        cacheEnabled: false,
+
+        fontFamilyFallback: SettingManager.DEFAULT_FONT_FAMILY_FALLBACK,
+        devToolsEnabled: false, // 开发者工具设置
+
+        volume: 50, // 音量设置
     };
 
     constructor() {
-        this.settings = {
-            theme: "dark",
-            background: "video",
-            lyricSearchType: "custom",
-            lyricsEnabled: true,
-            extractTitle: "auto",
-            cacheEnabled: false,
-            fadeEnabled: true, // 新增：控制淡入淡出效果
-            primaryColor: SettingManager.DEFAULT_PRIMARY_COLOR, // 默认主色
-            secondaryColor: SettingManager.DEFAULT_SECONDARY_COLOR, // 默认次色
-            micaOpacity: SettingManager.DEFAULT_MICA_OPACITY, // 默认Mica透明度
-            fontFamilyCustom: SettingManager.DEFAULT_FONT_FAMILY_CUSTOM,
-            fontFamilyFallback: SettingManager.DEFAULT_FONT_FAMILY_FALLBACK,
-            videoQuality: 64, // 新增：背景视频清晰度，默认720P
-            hideSidebar: false,
-            hideTitbar: false,
-            devToolsEnabled: false, // 新增：开发者工具设置，默认禁用
-            autoMaximize: false,
-            lyricSource: "netease", // 新增：歌词来源，默认使用网易云
-            volume: SettingManager.DEFAULT_VOLUME, // 已存在的音量设置
-            loopLyricsEnabled: true, // 新增：循环歌单歌词同步功能，默认开启
-            autoPlayOnStartup: false
-        };
+        this.settings = { __proto__: SettingManager.DEFAULT_VALUES };
         this.listeners = new Map();
         this.STORAGE_KEY = "app_settings";
         this.loadSettings();
@@ -79,10 +55,9 @@ class SettingManager {
         try {
             const savedSettings = localStorage.getItem(this.STORAGE_KEY);
             if (savedSettings) {
-                const ss = JSON.parse(savedSettings);
-                for (const key in ss)
-                    if (Object.prototype.hasOwnProperty.call(ss, key))
-                        this.settings[key] = ss[key];
+                const parsed = JSON.parse(savedSettings);
+                for (const k in parsed)
+                    this.settings[k] = parsed[k];
             }
         } catch (error) {
             console.error("加载设置失败:", error);
@@ -245,6 +220,14 @@ class SettingManager {
             (value) => `${Math.round(value * 100)}%`,
             () => this.applyMicaOpacity()
         );
+
+        this.sliderSetting(
+            "lyricLineFontSize",
+            "24px",
+            "歌词字体大小已重置",
+            (value) => `${value}px`,
+            () => this.applyFontSize()
+        );
     }
 
     sliderSetting(id, defaultValue, resetText, value2display, afterValueApply) {
@@ -298,6 +281,11 @@ class SettingManager {
         if (typeof c === "string" && c.trim().length > 0) c = `${c}, `;
         root.style.setProperty("--font-family-custom", c);
         root.style.setProperty("--font-family-fallback", this.settings.fontFamilyFallback);
+    }
+
+    applyFontSize() {
+        const root = document.documentElement;
+        root.style.setProperty("--lyric-line-font-size", `${this.settings.lyricLineFontSize}px`);
     }
 
     applySettingChange(key, value) {
