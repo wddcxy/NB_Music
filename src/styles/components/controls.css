@@ -17,8 +17,6 @@
   gap: 12px;
 }
 
-
-
 /* 通用图标样式 */
 i {
   cursor: pointer;
@@ -100,7 +98,6 @@ i.loved {
   transition: width opacity 0.2s;
 }
 
-
 .song:hover .controls {
   opacity: 1;
   animation: controls 2s;
@@ -141,7 +138,7 @@ i.loved {
   transform: scale(0.92) rotate(-1deg);
   max-height: 0;
   margin: 0;
-  padding: 0;
+  padding: 0 !important;
   filter: blur(2px);
 }
 
@@ -207,4 +204,89 @@ i.loved {
 
 .list.focs span.focs.moving {
   animation: fcl 200ms cubic-bezier(1, 0.8, 0, 0.2) 160ms;
+}
+
+/* 增强按钮交互动画 */
+.control .buttons > div {
+  transition: transform 0.3s var(--animation-timing-bounce),
+              background-color 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 按钮按下特效 */
+.control .buttons > div:active::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 50%;
+  transform: scale(0);
+  opacity: 0;
+  animation: button-press 0.4s var(--animation-timing-bounce);
+}
+
+@keyframes button-press {
+  0% { transform: scale(0); opacity: 0.7; }
+  100% { transform: scale(1); opacity: 0; }
+}
+
+/* 播放/暂停按钮状态动画 */
+.play.playing i,
+.play.pausing i {
+  animation: btn-pulse 0.4s var(--animation-timing-bounce);
+}
+
+@keyframes btn-pulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.9); }
+  100% { transform: scale(1); }
+}
+
+/* 进度条增强动画 */
+.progress {
+  position: relative;
+}
+
+.progress-bar {
+  cursor: pointer;
+  transition: height 0.2s var(--animation-timing-bounce);
+}
+
+.progress-bar:hover {
+  height: 8px;
+}
+
+.progress-bar.clicked::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.2);
+  animation: progress-click 0.4s var(--animation-timing);
+  pointer-events: none;
+}
+
+@keyframes progress-click {
+  0% { opacity: 0.5; }
+  100% { opacity: 0; }
+}
+
+/* 音量控制动画 */
+.volume i {
+  transition: transform 0.3s var(--animation-timing-bounce),
+              color 0.2s ease;
+}
+
+.volume:hover i {
+  transform: scale(1.1);
+}
+
+.volume:active i {
+  transform: scale(0.9);
 }

@@ -42,7 +42,6 @@
 
 /* 滚动条反馈优化 */
 ::-webkit-scrollbar-thumb:active {
-  background-color: rgba(var(--theme-1-rgb), 0.7);
   border: 3px solid transparent;
 }
 
