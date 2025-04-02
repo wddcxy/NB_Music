@@ -46,7 +46,7 @@
 
 /* 歌词行样式 */
 .lyric-line {
-  font-size: 18px;
+  font-size: var(--lyric-line-font-size);
   line-height: 1.8;
   margin: 8px 0;
   min-height: 32px;
