@@ -10,54 +10,126 @@ const https = require("https");
 
 let browserAuthServer = null;
 
+// 窗口状态存储键名
+const WINDOW_STATE_KEY = "windowState";
+
+// 保存窗口状态的函数
+function saveWindowState(win) {
+    if (!win.isMaximized() && !win.isMinimized()) {
+        // 只有在非最大化和非最小化状态下才保存大小和位置
+        const bounds = win.getBounds();
+        const state = {
+            x: bounds.x,
+            y: bounds.y,
+            width: bounds.width,
+            height: bounds.height,
+            isMaximized: false
+        };
+        storage.set(WINDOW_STATE_KEY, state);
+    } else if (win.isMaximized()) {
+        // 如果窗口是最大化状态，只保存最大化标志
+        storage.set(WINDOW_STATE_KEY, { isMaximized: true });
+    }
+}
+
+// 获取保存的窗口状态
+function getWindowState() {
+    const defaultState = {
+        width: 1280,
+        height: 800,
+        isMaximized: false
+    };
+
+    try {
+        const state = storage.get(WINDOW_STATE_KEY, defaultState);
+        return state;
+    } catch (error) {
+        console.error("获取窗口状态失败:", error);
+        return defaultState;
+    }
+}
+
+// 应用窗口状态
+function applyWindowState(win) {
+    const state = getWindowState();
+    const restoreWindowState = storage.get("restoreWindowState", true); // 默认开启窗口状态恢复
+
+    if (restoreWindowState) {
+        if (state.x !== undefined && state.y !== undefined) {
+            // 确保窗口位于可见区域
+            const { screen } = require("electron");
+            const displays = screen.getAllDisplays();
+            let isVisible = false;
+
+            for (const display of displays) {
+                const bounds = display.bounds;
+                if (
+                    state.x >= bounds.x &&
+                    state.y >= bounds.y &&
+                    state.x < bounds.x + bounds.width &&
+                    state.y < bounds.y + bounds.height
+                ) {
+                    isVisible = true;
+                    break;
+                }
+            }
+
+            if (isVisible) {
+                win.setBounds({
+                    x: state.x,
+                    y: state.y,
+                    width: state.width || 1280,
+                    height: state.height || 800
+                });
+            }
+        }
+
+        if (state.isMaximized) {
+            win.maximize();
+        }
+    }
+}
+
 axios.defaults.withCredentials = true;
 
 function parseCommandLineArgs() {
     const args = process.argv.slice(1);
     const showWelcomeArg = args.includes("--show-welcome");
-    const noCookiesArg = args.includes("--no-cookies"); // 添加新参数检测
+    const noCookiesArg = args.includes("--no-cookies");
     return {
         showWelcome: showWelcomeArg,
-        noCookies: noCookiesArg // 返回新参数状态
+        noCookies: noCookiesArg
     };
 }
+
 function setupAutoUpdater(win) {
-    // 开发环境跳过更新检查
     if (!app.isPackaged) return;
 
-    // 配置更新服务器
     autoUpdater.setFeedURL({
         provider: "github",
         owner: "NB-Group",
         repo: "NB_Music"
     });
 
-    // 检查更新出错
     autoUpdater.on("error", (err) => {
         win.webContents.send("update-error", err.message);
     });
 
-    // 检查到新版本
     autoUpdater.on("update-available", (info) => {
         win.webContents.send("update-available", info);
     });
 
-    // 没有新版本
     autoUpdater.on("update-not-available", () => {
         win.webContents.send("update-not-available");
     });
 
-    // 下载进度
     autoUpdater.on("download-progress", (progress) => {
         win.webContents.send("download-progress", progress);
     });
 
-    // 更新下载完成
     autoUpdater.on("update-downloaded", () => {
-        // 通知渲染进程
         win.webContents.send("update-downloaded");
 
-        // 提示重启应用
         const dialogOpts = {
             type: "info",
             buttons: ["重启", "稍后"],
@@ -72,14 +144,13 @@ function setupAutoUpdater(win) {
             });
     });
 
-    // 每小时检查一次更新
     setInterval(() => {
         autoUpdater.checkForUpdates();
     }, 60 * 60 * 1000);
 
-    // 启动时检查更新
     autoUpdater.checkForUpdates();
 }
+
 function loadCookies() {
     if (!storage.has("cookies")) return null;
     return storage.get("cookies");
@@ -128,13 +199,11 @@ function getIconPath() {
     }
 }
 
-// 创建托盘菜单
 function createTrayMenu(win) {
     const iconPath = getIconPath();
     const tray = new Tray(iconPath);
 
     if (process.platform === "darwin") {
-        // 设置托盘图标大小
         const trayIcon = nativeImage.createFromPath(iconPath);
         const resizedTrayIcon = trayIcon.resize({
             width: 16,
@@ -143,11 +212,9 @@ function createTrayMenu(win) {
         tray.setImage(resizedTrayIcon);
     }
 
-    // 初始化托盘状态
     let isPlaying = false;
     let currentSong = { title: "未在播放", artist: "" };
 
-    // 更新托盘菜单
     function updateTrayMenu() {
         let songInfo = currentSong.artist ? `${currentSong.title} - ${currentSong.artist}` : currentSong.title;
 
@@ -224,29 +291,24 @@ function createTrayMenu(win) {
         const contextMenu = Menu.buildFromTemplate(menuTemplate);
         tray.setContextMenu(contextMenu);
 
-        // 设置工具提示显示当前播放信息
         tray.setToolTip(`NB Music - ${isPlaying ? "正在播放: " : "已暂停: "}${songInfo}`);
     }
 
-    // 单击托盘图标显示窗口
     tray.on("click", () => {
         showWindow(win);
     });
 
-    // 监听来自渲染进程的托盘更新事件
     ipcMain.on("update-tray", (_, data) => {
         if (data.isPlaying !== undefined) isPlaying = data.isPlaying;
         if (data.song) currentSong = data.song;
         updateTrayMenu();
     });
 
-    // 初始化菜单
     updateTrayMenu();
 
     return tray;
 }
 
-// 显示主窗口的辅助函数
 function showWindow(win) {
     if (!win.isVisible()) {
         win.show();
@@ -257,17 +319,14 @@ function showWindow(win) {
     win.focus();
 }
 
-// 全局变量存储桌面歌词窗口
 let desktopLyricsWindow = null;
 
 function createDesktopLyricsWindow() {
-    // 如果已存在桌面歌词窗口，则不重复创建
     if (desktopLyricsWindow) {
         desktopLyricsWindow.show();
         return desktopLyricsWindow;
     }
 
-    // 创建桌面歌词窗口
     desktopLyricsWindow = new BrowserWindow({
         width: 800,
         height: 100,
@@ -283,22 +342,18 @@ function createDesktopLyricsWindow() {
             nodeIntegration: true,
             contextIsolation: false,
             enableRemoteModule: true,
-            backgroundThrottling: false // 禁止后台节流，确保即使不可见也能继续工作
+            backgroundThrottling: false
         }
     });
 
-    // 加载桌面歌词页面
     desktopLyricsWindow.loadFile("src/desktop-lyrics.html");
 
-    // 桌面歌词窗口准备好时显示
     desktopLyricsWindow.once("ready-to-show", () => {
         desktopLyricsWindow.show();
     });
 
-    // 监听窗口关闭事件
     desktopLyricsWindow.on("closed", () => {
         desktopLyricsWindow = null;
-        // 通知主窗口桌面歌词已关闭
         if (global.mainWindow) {
             global.mainWindow.webContents.send("desktop-lyrics-closed");
         }
@@ -314,37 +369,41 @@ function createWindow() {
         return;
     }
 
-    // 创建主窗口
+    const windowState = getWindowState();
+
     const win = new BrowserWindow({
         frame: false,
         icon: getIconPath(),
         backgroundColor: "#2f3241",
-        width: 1280,
-        height: 800,
+        width: windowState.width || 1280,
+        height: windowState.height || 800,
         minWidth: 1280,
         minHeight: 800,
+        x: windowState.x,
+        y: windowState.y,
         webPreferences: {
             nodeIntegration: true,
             contextIsolation: false,
             enableRemoteModule: true,
             webSecurity: false,
-            backgroundThrottling: false // 禁止后台节流，确保最小化时继续工作
+            backgroundThrottling: false
         },
-        // 添加这些属性以改善窗口行为
-        show: false, // 先不显示，等内容加载完再显示
+        show: false,
         skipTaskbar: false
     });
 
-    // 创建托盘
     createTrayMenu(win);
 
-    // 当窗口准备好显示时才显示
     win.once("ready-to-show", () => {
         win.show();
         win.focus();
+
+        const restoreWindowState = storage.get("restoreWindowState", true);
+        if (restoreWindowState && windowState.isMaximized) {
+            win.maximize();
+        }
     });
 
-    // 保持窗口活跃 - 即使最小化也运行动画和计时器
     win.webContents.setBackgroundThrottling(false);
 
     setupAutoUpdater(win);
@@ -359,15 +418,12 @@ function createWindow() {
         win.webContents.send("command-line-args", cmdArgs);
     });
 
-    // 处理第二个实例启动的情况
     app.on("second-instance", (event, commandLine) => {
-        // 如果主窗口存在，确保它被显示、恢复并获得焦点
         if (win) {
             if (!win.isVisible()) win.show();
             if (win.isMinimized()) win.restore();
             win.focus();
 
-            // 可以解析第二个实例的命令行参数并处理
             const secondInstanceArgs = parseCommandLineArgs(commandLine);
             if (secondInstanceArgs.showWelcome) {
                 win.webContents.send("show-welcome");
@@ -375,14 +431,25 @@ function createWindow() {
         }
     });
 
-    // 设置应用退出标志
     app.isQuitting = false;
 
-    // 修改窗口关闭行为
+    win.on("resize", () => {
+        if (!win.isMinimized()) {
+            saveWindowState(win);
+        }
+    });
+
+    win.on("move", () => {
+        if (!win.isMinimized()) {
+            saveWindowState(win);
+        }
+    });
+
     win.on("close", (e) => {
         if (!app.isQuitting) {
             e.preventDefault();
-            win.hide(); // 隐藏窗口而不是关闭
+            saveWindowState(win);
+            win.hide();
             return false;
         }
     });
@@ -406,7 +473,7 @@ function createWindow() {
     });
 
     ipcMain.on("window-close", () => {
-        win.hide(); // 修改为隐藏窗口
+        win.hide();
     });
 
     ipcMain.on("quit-app", () => {
@@ -414,7 +481,6 @@ function createWindow() {
         app.quit();
     });
 
-    // 窗口状态变化时通知渲染进程
     win.on("maximize", () => {
         win.webContents.send("window-state-changed", true);
     });
@@ -431,7 +497,6 @@ function createWindow() {
         win.webContents.send("window-hide");
     });
 
-    // 监听窗口最小化事件
     win.on("minimize", () => {
         win.webContents.send("window-minimized");
     });
@@ -440,7 +505,6 @@ function createWindow() {
         win.webContents.send("window-restored");
     });
 
-    // 添加新的login-success处理
     ipcMain.on("login-success", async (event, data) => {
         try {
             const { cookies } = data;
@@ -448,10 +512,8 @@ function createWindow() {
                 throw new Error("未能获取到cookie");
             }
 
-            // 直接保存cookie字符串
             saveCookies(cookies.join(";"));
 
-            // 设置请求头
             setBilibiliRequestCookie(cookies.join(";"));
 
             win.webContents.send("cookies-set", true);
@@ -462,8 +524,6 @@ function createWindow() {
     });
 
     ipcMain.on("open-dev-tools", () => {
-        // 修改为允许在打包后的应用中打开开发者工具
-        // 原代码只在开发环境中启用
         if (win.webContents.isDevToolsOpened()) {
             win.webContents.closeDevTools();
         } else {
@@ -471,9 +531,7 @@ function createWindow() {
         }
     });
 
-    // 处理开发者工具请求，检查是否应该打开
     ipcMain.on("open-dev-tools-request", (_, { devToolsEnabled }) => {
-        // 如果设置启用了开发者工具或者是在开发环境中，则打开开发者工具
         if (devToolsEnabled || !app.isPackaged) {
             if (win.webContents.isDevToolsOpened()) {
                 win.webContents.closeDevTools();
@@ -503,17 +561,15 @@ function createWindow() {
             browserAuthServer = https
                 .createServer(
                     {
-                        key: fs.readFileSync(path.join(__dirname, "..", "ssl", "privkey.pem")), // 私钥
-                        cert: fs.readFileSync(path.join(__dirname, "..", "ssl", "fullchain.pem")) // 证书
+                        key: fs.readFileSync(path.join(__dirname, "..", "ssl", "privkey.pem")),
+                        cert: fs.readFileSync(path.join(__dirname, "..", "ssl", "fullchain.pem"))
                     },
                     function (request, response) {
                         if (request.url === "/callback") {
                             let cookieString = request.headers.cookie + ";nbmusic_loginmode=browser";
 
-                            // 直接保存cookie字符串
                             saveCookies(cookieString);
 
-                            // 设置请求头
                             setBilibiliRequestCookie(cookieString);
 
                             response.writeHead(200, { "Content-Type": "application/json" });
@@ -606,7 +662,10 @@ function createWindow() {
         }
     });
 
-    // 返回窗口实例以便其他地方使用
+    ipcMain.on("set-restore-window-state", (event, value) => {
+        storage.set("restoreWindowState", value);
+    });
+
     return win;
 }
 
@@ -621,7 +680,6 @@ app.whenReady().then(async () => {
         });
     }
 
-    // 存储主窗口的引用
     global.mainWindow = createWindow();
 
     setupIPC();
@@ -638,7 +696,6 @@ app.on("window-all-closed", () => {
     }
 });
 app.on("before-quit", () => {
-    // 标记应用正在退出，这样可以防止窗口的关闭事件被阻止
     app.isQuitting = true;
 });
 
@@ -660,7 +717,6 @@ function setupIPC() {
     });
 
     ipcMain.on("check-for-updates", () => {
-        // 如果不是打包后的应用，显示开发环境提示
         if (!app.isPackaged) {
             BrowserWindow.getFocusedWindow()?.webContents.send("update-not-available", {
                 message: "开发环境中无法检查更新"
@@ -668,7 +724,6 @@ function setupIPC() {
             return;
         }
 
-        // 执行更新检查
         autoUpdater.checkForUpdates().catch((err) => {
             console.error("更新检查失败:", err);
             BrowserWindow.getFocusedWindow()?.webContents.send("update-error", err.message);
@@ -676,7 +731,6 @@ function setupIPC() {
     });
 
     ipcMain.on("install-update", () => {
-        // 安装已下载的更新
         autoUpdater.quitAndInstall(true, true);
     });
 
@@ -684,13 +738,11 @@ function setupIPC() {
         shell.openExternal(url);
     });
 
-    // 添加退出应用的IPC处理
     ipcMain.on("quit-application", () => {
         app.isQuitting = true;
         app.quit();
     });
 
-    // 桌面歌词相关IPC通信
     ipcMain.on("toggle-desktop-lyrics", (event, enabled) => {
         if (enabled) {
             createDesktopLyricsWindow();
@@ -712,35 +764,30 @@ function setupIPC() {
         }
     });
 
-    // 处理播放控制
     ipcMain.on("desktop-lyrics-toggle-play", () => {
         if (global.mainWindow) {
             global.mainWindow.webContents.send("desktop-lyrics-control", "toggle-play");
         }
     });
 
-    // 处理进度条拖动
     ipcMain.on("desktop-lyrics-seek", (event, time) => {
         if (global.mainWindow) {
             global.mainWindow.webContents.send("desktop-lyrics-control", "seek", time);
         }
     });
 
-    // 新增桌面歌词样式更新事件
     ipcMain.on("desktop-lyrics-update-style", (event, style) => {
         if (global.mainWindow) {
             global.mainWindow.webContents.send("desktop-lyrics-style-changed", style);
         }
     });
 
-    // 处理窗口大小调整
     ipcMain.on("desktop-lyrics-resize", (event, size) => {
         if (desktopLyricsWindow) {
             desktopLyricsWindow.setSize(size.width, size.height);
         }
     });
 
-    // 处理背景颜色选择
     ipcMain.on("desktop-lyrics-bg-color", () => {
         if (global.mainWindow) {
             global.mainWindow.webContents.send("show-lyrics-bg-color-picker");
@@ -748,7 +795,6 @@ function setupIPC() {
     });
 
     ipcMain.on("desktop-lyrics-ready", () => {
-        // 桌面歌词窗口准备好后，通知主窗口
         if (global.mainWindow) {
             global.mainWindow.webContents.send("desktop-lyrics-ready");
         }
@@ -758,7 +804,6 @@ function setupIPC() {
         if (desktopLyricsWindow) {
             const isAlwaysOnTop = desktopLyricsWindow.isAlwaysOnTop();
             desktopLyricsWindow.setAlwaysOnTop(!isAlwaysOnTop);
-            // 通知主窗口锁定状态已改变
             if (global.mainWindow) {
                 global.mainWindow.webContents.send("desktop-lyrics-pin-changed", !isAlwaysOnTop);
             }
@@ -766,14 +811,12 @@ function setupIPC() {
     });
 
     ipcMain.on("desktop-lyrics-font-size", () => {
-        // 通知主窗口打开字体大小设置
         if (global.mainWindow) {
             global.mainWindow.webContents.send("open-lyrics-font-settings");
         }
     });
 
     ipcMain.on("desktop-lyrics-settings", () => {
-        // 通知主窗口打开桌面歌词设置
         if (global.mainWindow) {
             global.mainWindow.webContents.send("open-lyrics-settings");
             global.mainWindow.focus();
@@ -787,24 +830,32 @@ function setupIPC() {
         }
     });
 
-    // 强制同步歌词 - 这个新增的IPC处理器可以确保在主窗口状态变化时仍能同步歌词
     ipcMain.on("force-sync-desktop-lyrics", () => {
         if (global.mainWindow && desktopLyricsWindow) {
             global.mainWindow.webContents.send("request-lyrics-sync");
         }
     });
+
+    ipcMain.handle("get-restore-window-state", () => {
+        return storage.get("restoreWindowState", true);
+    });
 }
 
-// 防止应用程序休眠
 app.commandLine.appendSwitch("disable-renderer-backgrounding");
 app.commandLine.appendSwitch("disable-background-timer-throttling");
 
 function setBilibiliRequestCookie(cookieString) {
     session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
-        if (details.url.includes("bilibili.com") || details.url.includes("bilivideo.cn") || details.url.includes("bilivideo.com") || details.url.includes("akamaized.net")) {
+        if (
+            details.url.includes("bilibili.com") ||
+            details.url.includes("bilivideo.cn") ||
+            details.url.includes("bilivideo.com") ||
+            details.url.includes("akamaized.net")
+        ) {
             details.requestHeaders["Cookie"] = cookieString;
             details.requestHeaders["referer"] = "https://www.bilibili.com/";
-            details.requestHeaders["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3";
+            details.requestHeaders["user-agent"] =
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3";
         }
         callback({ requestHeaders: details.requestHeaders });
     });

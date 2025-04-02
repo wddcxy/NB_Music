@@ -46,7 +46,7 @@
 
 /* 歌词行样式 */
 .lyric-line {
-  font-size: 18px;
+  font-size: 16px;
   line-height: 1.8;
   margin: 8px 0;
   min-height: 32px;
@@ -57,6 +57,74 @@
   will-change: transform, opacity, filter, top;
   position: absolute; /* 使用绝对定位以便独立控制位置 */
   width: 100%;
+  transition: all 0.2s ease;
+}
+
+/* 当前播放的歌词行 */
+.lyric-line.active {
+  opacity: 1;
+  font-weight: 500;
+  font-size: 18px;
+  color: var(--theme-2);
+  text-shadow: 0 0 8px rgba(var(--theme-2-rgb), 0.3);
+}
+
+/* 可点击歌词样式 */
+.lyric-line.clickable {
+  cursor: pointer;
+  position: relative;
+  padding: 4px 10px;
+  border-radius: 4px;
+}
+
+.lyric-line.clickable:hover {
+  background: rgba(var(--theme-2-rgb), 0.1);
+  opacity: 0.9;
+  transform: translateY(-1px);
+}
+
+.lyric-line.clickable:active {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* 歌词点击跳转指示器 */
+.lyric-jump-indicator {
+  position: fixed;
+  bottom: -60px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: var(--bg-glass);
+  backdrop-filter: blur(15px);
+  border: 1px solid var(--border-1);
+  border-radius: 20px;
+  padding: 8px 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  transition: bottom 0.3s var(--bounce);
+  z-index: 100;
+}
+
+.lyric-jump-indicator i {
+  color: var(--theme-2);
+  font-size: 18px;
+}
+
+.lyric-jump-indicator span {
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.lyric-jump-indicator.active {
+  bottom: 20px;
+}
+
+/* 为了更好的可访问性，添加焦点状态样式 */
+.lyric-line.clickable:focus-visible {
+  outline: 2px solid var(--theme-2);
+  background: rgba(var(--theme-2-rgb), 0.15);
 }
 
 /* 初始布局过渡效果 */

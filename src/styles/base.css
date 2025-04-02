@@ -32,13 +32,14 @@ body {
 /* 主内容布局 */
 .mica {
   display: grid;
-  grid-template-columns: 260px 1fr;
+  grid-template-columns: var(--sidebar-width, 260px) 1fr;
   grid-template-rows: auto 1fr;
   height: calc(100vh - 48px);
   backdrop-filter: blur(20px);
   -webkit-backdrop-filter: blur(20px);
   background: var(--mica);
   position: relative;
+  transition: grid-template-columns 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 /* 主题切换器容器 */
@@ -151,7 +152,7 @@ body {
 /* 响应式布局 */
 @media screen and (max-width: 1200px) {
   .mica {
-    grid-template-columns: 220px 1fr;
+    grid-template-columns: min(var(--sidebar-width, 220px), 220px) 1fr;
   }
 
   .player-content .cover {

@@ -10,6 +10,47 @@
   display: flex;
   flex-direction: column;
   height: 100%;
+  /* 允许调整大小 */
+  resize: horizontal;
+  min-width: 220px;
+  max-width: 400px;
+  width: var(--sidebar-width, 260px); /* 使用变量设置宽度，便于记忆状态 */
+  overflow-x: hidden;
+  z-index: 10; /* 确保侧边栏在调整大小时位于顶层 */
+}
+
+/* 侧栏调整大小的拖拽条 */
+.sidebar-resizer {
+  grid-column: 1;
+  grid-row: 1 / span 2;
+  width: 4px;
+  background-color: transparent;
+  cursor: col-resize;
+  position: absolute;
+  top: 0; /* 标题栏高度 */
+  bottom: 0;
+  left: calc(var(--sidebar-width, 260px) - 2px);
+  z-index: 20;
+  transition: background-color 0.2s ease;
+}
+
+.sidebar-resizer:hover,
+.sidebar-resizer.active {
+  background-color: var(--theme-2);
+}
+
+/* 拖拽时的样式 */
+body.resizing {
+  cursor: col-resize !important;
+  user-select: none;
+}
+
+body.resizing .sidebar {
+  transition: none; /* 拖拽时禁用过渡效果 */
+}
+
+body.resizing * {
+  cursor: col-resize !important;
 }
 
 /* 列表通用样式 */

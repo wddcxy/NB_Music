@@ -335,6 +335,8 @@
         </list>
       </div>
     </div>
+    <!-- 添加侧栏拖拽条 -->
+    <div class="sidebar-resizer" id="sidebarResizer"></div>
     <div class="content">
       <div class="player">
         <div class="player-content">
@@ -498,6 +500,61 @@
               </div>
             </div>
           </div>
+          <!-- 启动相关设置 - 新增分类 -->
+          <div class="setting-category">
+            <div class="setting-category-title"><i class="bi bi-power"></i> 启动设置</div>
+            <div class="setting-category-description">控制应用启动行为和窗口状态</div>
+          </div>
+          <div class="setting-group">
+            <div class="setting-item">
+              <div class="setting-info">
+                <i class="bi bi-arrows-fullscreen"></i>
+                <div class="words">
+                  <div class="setting-name">自动全屏</div>
+                  <div class="setting-descrition">启动软件时自动最大化窗口</div>
+                </div>
+              </div>
+              <div class="setting-value">
+                <nav data-nav-id="nav-auto-maximize">
+                  <a data-key="autoMaximize" data-value="true">启用</a>
+                  <a data-key="autoMaximize" data-value="false" class="active">禁用</a>
+                </nav>
+              </div>
+            </div>
+            
+            <div class="setting-item">
+              <div class="setting-info">
+                <i class="bi bi-window-desktop"></i>
+                <div class="words">
+                  <div class="setting-name">记住窗口状态</div>
+                  <div class="setting-descrition">下次启动时恢复窗口的位置、大小和状态</div>
+                </div>
+              </div>
+              <div class="setting-value">
+                <nav data-nav-id="nav-restore-window">
+                  <a data-key="restoreWindowState" data-value="true" class="active">启用</a>
+                  <a data-key="restoreWindowState" data-value="false">禁用</a>
+                </nav>
+              </div>
+            </div>
+            
+            <!-- 添加自动播放设置 - 移动到启动设置分类下 -->
+            <div class="setting-item">
+              <div class="setting-info">
+                <i class="bi bi-play-circle"></i>
+                <div class="words">
+                  <div class="setting-name">启动自动播放</div>
+                  <div class="setting-descrition">启动软件时自动开始播放上次的歌曲</div>
+                </div>
+              </div>
+              <div class="setting-value">
+                <nav data-nav-id="nav-autoplay">
+                  <a data-key="autoPlayOnStartup" data-value="true">启用</a>
+                  <a class="active" data-key="autoPlayOnStartup" data-value="false">禁用</a>
+                </nav>
+              </div>
+            </div>
+          </div>
           <!-- 外观设置 -->
           <div class="setting-category">
             <div class="setting-category-title"><i class="bi bi-palette"></i> 外观设置</div>
@@ -622,22 +679,6 @@
               </div>
             </div>
 
-            <div class="setting-item">
-              <div class="setting-info">
-                <i class="bi bi-arrows-fullscreen"></i>
-                <div class="words">
-                  <div class="setting-name">自动全屏</div>
-                  <div class="setting-descrition">是否打开软件就自动全屏</div>
-                </div>
-              </div>
-              <div class="setting-value">
-                <nav data-nav-id="nav-auto-maximize">
-                  <a data-key="autoMaximize" data-value="true">启用</a>
-                  <a data-key="autoMaximize" data-value="false" class="active">禁用</a>
-                </nav>
-              </div>
-            </div>
-
             <!-- 音频播放设置 -->
             <div class="setting-category">
               <div class="setting-category-title"><i class="bi bi-music-note-beamed"></i> 播放设置</div>
@@ -673,23 +714,6 @@
                   <nav data-nav-id="nav-lyric-source">
                     <a class="active" data-key="lyricSource" data-value="netease">网易云歌词</a>
                     <a data-key="lyricSource" data-value="bilibili">B站字幕</a>
-                  </nav>
-                </div>
-              </div>
-
-              <!-- 添加自动播放设置 -->
-              <div class="setting-item">
-                <div class="setting-info">
-                  <i class="bi bi-play-circle"></i>
-                  <div class="words">
-                    <div class="setting-name">启动自动播放</div>
-                    <div class="setting-descrition">启动软件时自动开始播放上次的歌曲</div>
-                  </div>
-                </div>
-                <div class="setting-value">
-                  <nav data-nav-id="nav-autoplay">
-                    <a data-key="autoPlayOnStartup" data-value="true">启用</a>
-                    <a class="active" data-key="autoPlayOnStartup" data-value="false">禁用</a>
                   </nav>
                 </div>
               </div>

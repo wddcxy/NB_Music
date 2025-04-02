@@ -37,7 +37,13 @@ class SettingManager {
         desktopLyricsEnabled: "false",
         
         // 默认禁用启动时自动播放
-        autoPlayOnStartup: "false"
+        autoPlayOnStartup: "false",
+        
+        // 默认启用窗口状态记忆
+        restoreWindowState: "true",
+        
+        // 默认侧栏宽度
+        sidebarWidth: "260"
     };
 
     constructor() {
@@ -62,12 +68,15 @@ class SettingManager {
             lyricSource: "netease", // 新增：歌词来源，默认使用网易云
             volume: SettingManager.DEFAULT_VOLUME, // 已存在的音量设置
             loopLyricsEnabled: true, // 新增：循环歌单歌词同步功能，默认开启
-            autoPlayOnStartup: false
+            autoPlayOnStartup: false,
+            restoreWindowState: true, // 新增：记忆窗口状态，默认启用
+            sidebarWidth: 260 // 侧栏宽度设置
         };
         this.listeners = new Map();
         this.STORAGE_KEY = "app_settings";
         this.loadSettings();
         this.setupSettingListeners();
+        this.setupWindowStateSettings(); // 新增：设置窗口状态记忆
         this.setupAboutLinks();
         this.setAppVersion();
         this.setupCustomThemeControls();
@@ -323,6 +332,10 @@ class SettingManager {
             case "fontFamilyCustom":
             case "fontFamilyFallback":
                 this.applyFontFamily();
+                break;
+            case "restoreWindowState":
+                // 将设置同步到主进程
+                ipcRenderer.send("set-restore-window-state", value === "true");
                 break;
             // 其他设置的处理...
         }
@@ -618,6 +631,24 @@ class SettingManager {
                     this.fetchContributors();
                 });
             });
+    }
+
+    // 新增方法：设置窗口状态记忆
+    setupWindowStateSettings() {
+        // 从主进程获取当前的窗口状态设置
+        ipcRenderer.invoke("get-restore-window-state").then(value => {
+            this.settings.restoreWindowState = value;
+            
+            // 更新UI
+            const navElement = document.querySelector(`[data-key="restoreWindowState"][data-value="${value}"]`);
+            if (navElement) {
+                const navParent = navElement.parentElement;
+                navParent.querySelectorAll("a").forEach(a => a.classList.remove("active"));
+                navElement.classList.add("active");
+            }
+        }).catch(error => {
+            console.error("获取窗口状态设置失败:", error);
+        });
     }
 }
 

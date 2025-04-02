@@ -787,7 +787,8 @@ class UIManager {
                 suggestionContainer.classList.remove("active");
             }
 
-            this.musicSearcher.searchMusic(keyword);
+            // 执行搜索
+            await this.musicSearcher.searchMusic(keyword);
         } catch (error) {
             this.showNotification("搜索失败: " + error.message, "error");
         }

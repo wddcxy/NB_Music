@@ -87,6 +87,12 @@ class MusicSearcher {
         if (!keyword) return;
 
         try {
+            // 检查是否是视频链接
+            if (this.isBilibiliLink(keyword)) {
+                this.handleBilibiliLink(keyword);
+                return;
+            }
+
             // 显示搜索结果区域
             this.uiManager.show(".search-result");
             const list = document.querySelector(".search-result .list");
@@ -312,6 +318,182 @@ class MusicSearcher {
             console.error("搜索失败:", error);
             // eslint-disable-next-line no-undef
             list.innerHTML = "搜索失败，请重试";
+        }
+    }
+
+    /**
+     * 检查是否为哔哩哔哩视频链接
+     * @param {string} text - 待检查的文本
+     * @returns {boolean} 是否为哔哩哔哩视频链接
+     */
+    isBilibiliLink(text) {
+        // 匹配各种B站视频链接格式
+        const patterns = [
+            /https?:\/\/(?:www\.)?bilibili\.com\/video\/([A-Za-z0-9]+)/i, // 标准网页链接
+            /https?:\/\/b23\.tv\/([A-Za-z0-9]+)/i, // 短链接
+            /BV([A-Za-z0-9]+)/i, // BV号直接输入
+            /av(\d+)/i // av号直接输入
+        ];
+
+        return patterns.some((pattern) => pattern.test(text));
+    }
+
+    /**
+     * 从文本中提取视频ID
+     * @param {string} text - 包含视频链接的文本
+     * @returns {string|null} 视频ID，未找到则返回null
+     */
+    extractVideoId(text) {
+        // 从各种格式中提取BV号或AV号
+        const bvMatch = text.match(/BV([A-Za-z0-9]+)/i) || text.match(/\/video\/BV([A-Za-z0-9]+)/i);
+        if (bvMatch) {
+            return `BV${bvMatch[1]}`;
+        }
+
+        const avMatch = text.match(/av(\d+)/i) || text.match(/\/video\/av(\d+)/i);
+        if (avMatch) {
+            return `av${avMatch[1]}`;
+        }
+
+        // 处理短链接，需要进行重定向获取最终URL
+        const shortMatch = text.match(/b23\.tv\/([A-Za-z0-9]+)/i);
+        if (shortMatch) {
+            return `https://b23.tv/${shortMatch[1]}`; // 返回完整短链接，后续需要解析
+        }
+
+        return null;
+    }
+
+    /**
+     * 处理哔哩哔哩视频链接
+     * @param {string} link - 视频链接
+     */
+    async handleBilibiliLink(link) {
+        try {
+            this.uiManager.showNotification("正在解析视频链接...", "info");
+
+            // 提取视频ID
+            let videoId = this.extractVideoId(link);
+
+            if (!videoId) {
+                throw new Error("无法识别视频ID");
+            }
+
+            // 处理短链接的情况
+            if (videoId.startsWith("https://")) {
+                try {
+                    // 显示加载状态
+                    this.uiManager.showNotification("正在解析短链接...", "info");
+
+                    // 获取短链接的最终URL
+                    const response = await fetch(videoId, {
+                        method: "HEAD",
+                        redirect: "follow"
+                    });
+
+                    // 从重定向后的URL中提取视频ID
+                    const finalUrl = response.url;
+                    videoId = this.extractVideoId(finalUrl);
+
+                    if (!videoId) {
+                        throw new Error("无法从短链接解析视频ID");
+                    }
+                } catch (error) {
+                    console.error("短链接解析失败:", error);
+                    throw new Error("短链接解析失败");
+                }
+            }
+
+            // 获取视频信息
+            this.uiManager.showNotification("正在获取视频信息...", "info");
+
+            // 判断是BV号还是AV号
+            const isBvid = videoId.startsWith("BV");
+
+            // 获取视频详情
+            let videoDetail;
+            try {
+                const params = isBvid ? `bvid=${videoId}` : `aid=${videoId.substring(2)}`;
+                const response = await axios.get(`https://api.bilibili.com/x/web-interface/view?${params}`);
+
+                if (response.data.code !== 0) {
+                    throw new Error(response.data.message || "获取视频信息失败");
+                }
+
+                videoDetail = response.data.data;
+            } catch (error) {
+                console.error("获取视频信息失败:", error);
+                throw new Error("获取视频信息失败，请检查链接是否正确");
+            }
+
+            // 切换到播放器界面
+            document.querySelector("#function-list .player").click();
+
+            // 预先设置基本信息
+            const songInfo = {
+                title: videoDetail.title,
+                artist: videoDetail.owner.name,
+                poster: videoDetail.pic.startsWith("http") ? videoDetail.pic : `https:${videoDetail.pic}`,
+                bvid: isBvid ? videoId : videoDetail.bvid,
+                lyric: "等待获取歌词"
+            };
+
+            await this.playlistManager.updateUIForCurrentSong(songInfo);
+
+            // 设置加载状态
+            const playButton = document.querySelector(".control>.buttons>.play");
+            const progressBar = document.querySelector(".progress-bar-inner");
+            playButton.disabled = true;
+            progressBar.classList.add("loading");
+
+            // 获取音频URL等信息
+            const urls = await this.getAudioLink(isBvid ? videoId : videoDetail.bvid, true);
+            let url = urls[0];
+
+            try {
+                const res = await axios.get(url);
+                if (res.status === 403) {
+                    url = urls[1];
+                }
+            } catch {
+                url = urls[1];
+            }
+
+            // 获取视频URL
+            const videoUrl = await this.getBilibiliVideoUrl(isBvid ? videoId : videoDetail.bvid, urls[2]);
+
+            // 获取歌词
+            const lyricSearchType = this.settingManager.getSetting("lyricSearchType");
+            let lyric;
+
+            if (lyricSearchType === "custom") {
+                lyric = await this.showLyricSearchDialog(videoDetail.title);
+            } else {
+                lyric = await this.getLyrics(videoDetail.title, isBvid ? videoId : videoDetail.bvid, urls[2]);
+            }
+
+            // 完成加载，创建完整的歌曲对象
+            const newSong = {
+                ...songInfo,
+                audio: url,
+                cid: urls[2],
+                video: videoUrl,
+                lyric: lyric
+            };
+
+            // 恢复界面状态
+            progressBar.classList.remove("loading");
+            playButton.disabled = false;
+
+            // 添加到播放列表并播放
+            this.playlistManager.addSong(newSong);
+            this.playlistManager.setPlayingNow(this.playlistManager.playlist.length - 1);
+            this.uiManager.renderPlaylist();
+
+            this.uiManager.showNotification(`成功播放视频: ${videoDetail.title}`, "success");
+        } catch (error) {
+            console.error("处理B站链接失败:", error);
+            this.uiManager.showNotification(`无法播放视频: ${error.message}`, "error");
         }
     }
 

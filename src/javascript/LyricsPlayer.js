@@ -117,6 +117,9 @@ class LyricsPlayer {
         
         this.setVisibility(this.settingManager.getSetting('lyricsEnabled')=="true");
         this.init();
+
+        // 添加歌词点击事件处理
+        this.setupLyricsClickEvent();
     }
 
     init() {
@@ -133,6 +136,7 @@ class LyricsPlayer {
             if (data.type === "lyric") {
                 // 添加数据索引属性，便于调试和确保索引正确
                 element.setAttribute("data-lyric-index", lyricIndex);
+                element.setAttribute("data-time", `[${Math.floor(data.lineStart / 60000)}:${((data.lineStart % 60000) / 1000).toFixed(2)}]`);
                 
                 // 添加初始过渡动画类
                 element.classList.add("initial");
@@ -1098,6 +1102,60 @@ class LyricsPlayer {
         if (this.resizeObserver) {
             this.resizeObserver.disconnect();
         }
+    }
+
+    /**
+     * 设置歌词点击事件
+     */
+    setupLyricsClickEvent() {
+        const lyricsContainer = document.getElementById('lyrics-container');
+        if (!lyricsContainer) return;
+
+        // 使用事件委托来处理所有歌词行的点击
+        lyricsContainer.addEventListener('click', (event) => {
+            // 检查是否启用了歌词跳转
+            const target = event.target.closest('.lyric-line');
+            if (!target) return;
+
+            // 获取时间戳
+            const timestamp = target.getAttribute('data-time');
+            if (!timestamp) return;
+
+            // 将时间戳转换为秒
+            const seconds = this.parseTimeToSeconds(timestamp);
+            if (seconds === null) return;
+
+            // 检查是否在有效范围内
+            if (this.audio && !isNaN(seconds) && isFinite(seconds) && seconds >= 0) {
+                // 设置音频时间并播放
+                this.audio.currentTime = seconds;
+                
+                // 如果音频是暂停状态，则开始播放
+                if (this.audio.paused) {
+                    this.audio.play().catch(err => console.warn("播放失败:", err));
+                }
+            }
+        });
+    }
+
+    /**
+     * 将时间标签解析为秒数
+     * @param {string} timeStr - 时间标签，格式为[mm:ss.xx]
+     * @returns {number|null} - 对应的秒数，解析失败则返回null
+     */
+    parseTimeToSeconds(timeStr) {
+        // 移除方括号
+        const time = timeStr.replace(/[\[\]]/g, '');
+        
+        // 解析分钟、秒钟和毫秒
+        const match = time.match(/(\d+):(\d+)\.(\d+)/);
+        if (!match) return null;
+        
+        const minutes = parseInt(match[1], 10);
+        const seconds = parseInt(match[2], 10);
+        const milliseconds = parseInt(match[3], 10) / 100; // 转换为秒的小数部分
+        
+        return minutes * 60 + seconds + milliseconds;
     }
 }
 

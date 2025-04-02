@@ -15,6 +15,7 @@ const LocalImportManager = require("./javascript/LocalImportManager");
 const VideoPlayerManager = require("./javascript/VideoPlayerManager");
 const EffectManager = require("./javascript/EffectManager.js");
 const VolumeControlManager = require("./javascript/VolumeControlManager.js");
+const SidebarResizer = require("./javascript/SidebarResizer");
 
 class App {
     constructor() {
@@ -62,6 +63,7 @@ class App {
             this.localImportManager = new LocalImportManager(this.playlistManager, this.uiManager);
             this.videoPlayerManager = new VideoPlayerManager(this.playlistManager, this.uiManager);
             this.effectManager = new EffectManager(this.audioPlayer, this.settingManager);
+            this.sidebarResizer = new SidebarResizer(this.settingManager);
 
             // 5. 更新所有组件间的引用关系
             this.audioPlayer.playlistManager = this.playlistManager;
