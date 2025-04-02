@@ -57,7 +57,8 @@ class SettingManager {
             if (savedSettings) {
                 const parsed = JSON.parse(savedSettings);
                 for (const k in parsed)
-                    this.settings[k] = parsed[k];
+                    if (Object.prototype.hasOwnProperty.call(parsed, k))
+                        this.settings[k] = parsed[k];
             }
         } catch (error) {
             console.error("加载设置失败:", error);
