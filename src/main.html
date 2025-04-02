@@ -486,7 +486,7 @@
                 </div>
               </div>
 
-              <!-- 新增：贡献者展示区域 -->
+              <!-- 贡献者展示区域 -->
               <div class="contributors-section">
                 <div class="contributors-title">
                   <i class="bi bi-people-fill"></i> 项目贡献者
@@ -500,7 +500,8 @@
               </div>
             </div>
           </div>
-          <!-- 启动相关设置 - 新增分类 -->
+
+          <!-- 启动相关设置 -->
           <div class="setting-category">
             <div class="setting-category-title"><i class="bi bi-power"></i> 启动设置</div>
             <div class="setting-category-description">控制应用启动行为和窗口状态</div>
@@ -538,7 +539,7 @@
               </div>
             </div>
             
-            <!-- 添加自动播放设置 - 移动到启动设置分类下 -->
+            <!-- 添加自动播放设置 -->
             <div class="setting-item">
               <div class="setting-info">
                 <i class="bi bi-play-circle"></i>
@@ -555,12 +556,14 @@
               </div>
             </div>
           </div>
+
           <!-- 外观设置 -->
           <div class="setting-category">
             <div class="setting-category-title"><i class="bi bi-palette"></i> 外观设置</div>
             <div class="setting-category-description">调整NB Music的视觉效果</div>
           </div>
           <div class="setting-group">
+
             <div class="setting-item">
               <div class="setting-info">
                 <i class="bi bi-circle-half"></i>
@@ -577,6 +580,7 @@
                 </nav>
               </div>
             </div>
+
             <div class="setting-item">
               <div class="setting-info">
                 <i class="bi bi-layout-sidebar"></i>
@@ -592,6 +596,7 @@
                 </nav>
               </div>
             </div>
+
             <div class="setting-item">
               <div class="setting-info">
                 <i class="bi bi-window-fullscreen"></i>
@@ -607,6 +612,7 @@
                 </nav>
               </div>
             </div>
+
             <!-- 主题色选择器 -->
             <div class="setting-item">
               <div class="setting-info">
@@ -646,6 +652,7 @@
                 </button>
               </div>
             </div>
+
             <!-- 背景填充 -->
             <div class="setting-item">
               <div class="setting-info">
@@ -663,6 +670,14 @@
                 </nav>
               </div>
             </div>
+          </div>
+
+          <!-- 字体设置 -->
+          <div class="setting-category">
+            <div class="setting-category-title"><i class="bi bi-fonts"></i> 字体设置</div>
+            <div class="setting-category-description">调整字体相关设置</div>
+          </div>
+          <div class="setting-group">
 
             <div class="setting-item">
               <div class="setting-info">
@@ -679,260 +694,288 @@
               </div>
             </div>
 
-            <!-- 音频播放设置 -->
-            <div class="setting-category">
-              <div class="setting-category-title"><i class="bi bi-music-note-beamed"></i> 播放设置</div>
-              <div class="setting-category-description">调整音频播放相关功能</div>
-            </div>
-            <div class="setting-group">
-              <div class="setting-item">
-                <div class="setting-info">
-                  <i class="bi bi-chat-square-text"></i>
-                  <div class="words">
-                    <div class="setting-name">歌词显示</div>
-                    <div class="setting-descrition">是否显示歌词</div>
-                  </div>
-                </div>
-                <div class="setting-value">
-                  <nav data-nav-id="nav-lyrics">
-                    <a class="active" data-key="lyricsEnabled" data-value="true">显示歌词</a>
-                    <a data-key="lyricsEnabled" data-value="false">隐藏歌词</a>
-                  </nav>
+            <div class="setting-item">
+              <div class="setting-info">
+                <i class="bi bi-fonts"></i>
+                <div class="words">
+                  <div class="setting-name">歌词字体大小</div>
+                  <div class="setting-descrition">调整播放界面的歌词字体大小（不能调整桌面歌词）</div>
                 </div>
               </div>
-
-              <!-- 在歌词显示设置下方添加歌词来源切换选项 -->
-              <div class="setting-item">
-                <div class="setting-info">
-                  <i class="bi bi-music-note-list"></i>
-                  <div class="words">
-                    <div class="setting-name">歌词来源</div>
-                    <div class="setting-descrition">选择歌词来源类型</div>
-                  </div>
-                </div>
-                <div class="setting-value">
-                  <nav data-nav-id="nav-lyric-source">
-                    <a class="active" data-key="lyricSource" data-value="netease">网易云歌词</a>
-                    <a data-key="lyricSource" data-value="bilibili">B站字幕</a>
-                  </nav>
-                </div>
-              </div>
-
-              <!-- 新增循环歌词同步设置 -->
-              <div class="setting-item">
-                <div class="setting-info">
-                  <i class="bi bi-arrow-repeat"></i>
-                  <div class="words">
-                    <div class="setting-name">循环歌词同步</div>
-                    <div class="setting-descrition">自动同步B站循环视频的歌词（使歌词重复播放）</div>
-                  </div>
-                </div>
-                <div class="setting-value">
-                  <nav data-nav-id="nav-loop-lyrics">
-                    <a class="active" data-key="loopLyricsEnabled" data-value="true">启用</a>
-                    <a data-key="loopLyricsEnabled" data-value="false">禁用</a>
-                  </nav>
-                </div>
-              </div>
-
-              <!-- 新增桌面歌词设置 -->
-              <div class="setting-item">
-                <div class="setting-info">
-                  <i class="bi bi-display"></i>
-                  <div class="words">
-                    <div class="setting-name">桌面歌词</div>
-                    <div class="setting-descrition">在桌面显示独立歌词窗口</div>
-                  </div>
-                </div>
-                <div class="setting-value">
-                  <nav data-nav-id="nav-desktop-lyrics">
-                    <a data-key="desktopLyricsEnabled" data-value="true">开启</a>
-                    <a class="active" data-key="desktopLyricsEnabled" data-value="false">关闭</a>
-                  </nav>
-                </div>
-              </div>
-
-              <div class="setting-item">
-                <div class="setting-info">
-                  <i class="bi bi-music-note"></i>
-                  <div class="words">
-                    <div class="setting-name">音频淡入淡出</div>
-                    <div class="setting-descrition">关闭可以修复部分情况下无声音的bug</div>
-                  </div>
-                </div>
-                <div class="setting-value">
-                  <nav data-nav-id="nav-fade">
-                    <a class="active" data-key="fadeEnabled" data-value="true">启用</a>
-                    <a data-key="fadeEnabled" data-value="false">禁用</a>
-                  </nav>
-                </div>
-              </div>
-              <div class="setting-item">
-                <div class="setting-info">
-                  <i class="bi bi-film"></i>
-                  <div class="words">
-                    <div class="setting-name">背景视频质量</div>
-                    <div class="setting-descrition">设置背景视频的清晰度(背景高斯模糊，没区别，建议低一点清晰度)</div>
-                  </div>
-                </div>
-                <div class="setting-value">
-                  <nav data-nav-id="nav-video-quality">
-                    <a data-key="videoQuality" data-value="16">360P</a>
-                    <a data-key="videoQuality" data-value="32">480P</a>
-                    <a class="active" data-key="videoQuality" data-value="64">720P</a>
-                    <a data-key="videoQuality" data-value="80">1080P</a>
-                    <a data-key="videoQuality" data-value="116">1080P60</a>
-                    <a data-key="videoQuality" data-value="120">4K</a>
-                  </nav>
-                </div>
+              <div class="setting-value slider-container">
+                <input type="range" id="lyricLineFontSize" min="10" max="50" step="1" class="slider" />
+                <span id="lyricLineFontSizeValue">24px</span>
+                <button id="lyricLineFontSizeReset" class="reset-btn" title="重置为默认值">
+                  <i class="bi bi-arrow-counterclockwise"></i>
+                </button>
               </div>
             </div>
 
-            <!-- 内容与数据设置 -->
-            <div class="setting-category">
-              <div class="setting-category-title"><i class="bi bi-database"></i> 内容与数据</div>
-              <div class="setting-category-description">管理数据显示和存储方式</div>
-            </div>
-            <div class="setting-group">
-              <div class="setting-item">
-                <div class="setting-info">
-                  <i class="bi bi-music-note-list"></i>
-                  <div class="words">
-                    <div class="setting-name">歌词搜索</div>
-                    <div class="setting-descrition">设置歌词搜索时，关键词的设置方式</div>
-                  </div>
-                </div>
-                <div class="setting-value">
-                  <nav data-nav-id="nav3">
-                    <a class="active" data-key="lyricSearchType" data-value="auto">自动搜索</a>
-                    <a data-key="lyricSearchType" data-value="custom">手动输入</a>
-                  </nav>
+          </div>
+
+          <!-- 播放设置 -->
+          <div class="setting-category">
+            <div class="setting-category-title"><i class="bi bi-music-note-beamed"></i> 播放设置</div>
+            <div class="setting-category-description">调整音频播放相关功能</div>
+          </div>
+          <div class="setting-group">
+            <div class="setting-item">
+              <div class="setting-info">
+                <i class="bi bi-chat-square-text"></i>
+                <div class="words">
+                  <div class="setting-name">歌词显示</div>
+                  <div class="setting-descrition">是否显示歌词</div>
                 </div>
               </div>
-              <div class="setting-item">
-                <div class="setting-info">
-                  <i class="bi bi-filter"></i>
-                  <div class="words">
-                    <div class="setting-name">标题处理</div>
-                    <div class="setting-descrition">如何显示歌曲标题(仅作用在侧边栏)</div>
-                  </div>
-                </div>
-                <div class="setting-value">
-                  <nav data-nav-id="nav3">
-                    <a data-key="extractTitle" data-value="on">提取关键词</a>
-                    <a class="active" data-key="extractTitle" data-value="off">完整显示</a>
-                    <a data-key="extractTitle" data-value="auto">直接截断</a>
-                  </nav>
-                </div>
-              </div>
-              <div class="setting-item">
-                <div class="setting-info">
-                  <i class="bi bi-cloud-download"></i>
-                  <div class="words">
-                    <div class="setting-name">缓存设置</div>
-                    <div class="setting-descrition">是否开启缓存歌曲与视频(鸡肋)</div>
-                  </div>
-                </div>
-                <div class="setting-value">
-                  <nav data-nav-id="nav4">
-                    <a class="active" data-key="cacheEnabled" data-value="true">开启缓存</a>
-                    <a data-key="cacheEnabled" data-value="false">关闭缓存</a>
-                  </nav>
-                  <button id="clearCache" class="cache-clear-btn">清除缓存</button>
-                </div>
+              <div class="setting-value">
+                <nav data-nav-id="nav-lyrics">
+                  <a class="active" data-key="lyricsEnabled" data-value="true">显示歌词</a>
+                  <a data-key="lyricsEnabled" data-value="false">隐藏歌词</a>
+                </nav>
               </div>
             </div>
 
-            <div class="setting-category">
-              <div class="setting-category-title"><i class="bi bi-gear-wide-connected"></i> 高级设置</div>
-              <div class="setting-category-description">更多高级设置 请不要随意更改 除非你知道你在做什么</div>
-            </div>
-            <div class="setting-group">
-              <div class="setting-item">
-                <div class="setting-info">
-                  <i class="bi bi-fonts"></i>
-                  <div class="words">
-                    <div class="setting-name">全局备用字体</div>
-                    <div class="setting-descrition">当所有自定义字体均无效时 将使用这里的字体 格式和自定义字体一样</div>
-                  </div>
-                </div>
-                <div class="setting-value">
-                  <nav data-nav-id="nav-titbar-fade">
-                    <input class="input" type="text" data-key="fontFamilyFallback" />
-                  </nav>
+            <!-- 歌词来源切换选项 -->
+            <div class="setting-item">
+              <div class="setting-info">
+                <i class="bi bi-music-note-list"></i>
+                <div class="words">
+                  <div class="setting-name">歌词来源</div>
+                  <div class="setting-descrition">选择歌词来源类型</div>
                 </div>
               </div>
+              <div class="setting-value">
+                <nav data-nav-id="nav-lyric-source">
+                  <a class="active" data-key="lyricSource" data-value="netease">网易云歌词</a>
+                  <a data-key="lyricSource" data-value="bilibili">B站字幕</a>
+                </nav>
+              </div>
+            </div>
+
+            <!-- 循环歌词同步设置 -->
+            <div class="setting-item">
+              <div class="setting-info">
+                <i class="bi bi-arrow-repeat"></i>
+                <div class="words">
+                  <div class="setting-name">循环歌词同步</div>
+                  <div class="setting-descrition">自动同步B站循环视频的歌词（使歌词重复播放）</div>
+                </div>
+              </div>
+              <div class="setting-value">
+                <nav data-nav-id="nav-loop-lyrics">
+                  <a class="active" data-key="loopLyricsEnabled" data-value="true">启用</a>
+                  <a data-key="loopLyricsEnabled" data-value="false">禁用</a>
+                </nav>
+              </div>
+            </div>
+
+            <!-- 桌面歌词设置 -->
+            <div class="setting-item">
+              <div class="setting-info">
+                <i class="bi bi-display"></i>
+                <div class="words">
+                  <div class="setting-name">桌面歌词</div>
+                  <div class="setting-descrition">在桌面显示独立歌词窗口</div>
+                </div>
+              </div>
+              <div class="setting-value">
+                <nav data-nav-id="nav-desktop-lyrics">
+                  <a data-key="desktopLyricsEnabled" data-value="true">开启</a>
+                  <a class="active" data-key="desktopLyricsEnabled" data-value="false">关闭</a>
+                </nav>
+              </div>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <i class="bi bi-music-note"></i>
+                <div class="words">
+                  <div class="setting-name">音频淡入淡出</div>
+                  <div class="setting-descrition">关闭可以修复部分情况下无声音的bug</div>
+                </div>
+              </div>
+              <div class="setting-value">
+                <nav data-nav-id="nav-fade">
+                  <a class="active" data-key="fadeEnabled" data-value="true">启用</a>
+                  <a data-key="fadeEnabled" data-value="false">禁用</a>
+                </nav>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 内容与数据设置 -->
+          <div class="setting-category">
+            <div class="setting-category-title"><i class="bi bi-database"></i> 内容与数据</div>
+            <div class="setting-category-description">管理数据显示和存储方式</div>
+          </div>
+          <div class="setting-group">
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <i class="bi bi-music-note-list"></i>
+                <div class="words">
+                  <div class="setting-name">歌词搜索</div>
+                  <div class="setting-descrition">设置歌词搜索时，关键词的设置方式</div>
+                </div>
+              </div>
+              <div class="setting-value">
+                <nav data-nav-id="nav3">
+                  <a class="active" data-key="lyricSearchType" data-value="auto">自动搜索</a>
+                  <a data-key="lyricSearchType" data-value="custom">手动输入</a>
+                </nav>
+              </div>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <i class="bi bi-filter"></i>
+                <div class="words">
+                  <div class="setting-name">标题处理</div>
+                  <div class="setting-descrition">如何显示歌曲标题(仅作用在侧边栏)</div>
+                </div>
+              </div>
+              <div class="setting-value">
+                <nav data-nav-id="nav3">
+                  <a data-key="extractTitle" data-value="on">提取关键词</a>
+                  <a class="active" data-key="extractTitle" data-value="off">完整显示</a>
+                  <a data-key="extractTitle" data-value="auto">直接截断</a>
+                </nav>
+              </div>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <i class="bi bi-film"></i>
+                <div class="words">
+                  <div class="setting-name">背景视频质量</div>
+                  <div class="setting-descrition">设置背景视频的清晰度(背景高斯模糊，没区别，建议低一点清晰度)</div>
+                </div>
+              </div>
+              <div class="setting-value">
+                <nav data-nav-id="nav-video-quality">
+                  <a data-key="videoQuality" data-value="16">360P</a>
+                  <a data-key="videoQuality" data-value="32">480P</a>
+                  <a class="active" data-key="videoQuality" data-value="64">720P</a>
+                  <a data-key="videoQuality" data-value="80">1080P</a>
+                  <a data-key="videoQuality" data-value="116">1080P60</a>
+                  <a data-key="videoQuality" data-value="120">4K</a>
+                </nav>
+              </div>
+            </div>
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <i class="bi bi-cloud-download"></i>
+                <div class="words">
+                  <div class="setting-name">缓存设置</div>
+                  <div class="setting-descrition">是否开启缓存歌曲与视频(鸡肋)</div>
+                </div>
+              </div>
+              <div class="setting-value">
+                <nav data-nav-id="nav4">
+                  <a class="active" data-key="cacheEnabled" data-value="true">开启缓存</a>
+                  <a data-key="cacheEnabled" data-value="false">关闭缓存</a>
+                </nav>
+                <button id="clearCache" class="cache-clear-btn">清除缓存</button>
+              </div>
+            </div>
+
+          </div>
+
+          <!-- 高级设置 -->
+          <div class="setting-category">
+            <div class="setting-category-title"><i class="bi bi-gear-wide-connected"></i> 高级设置</div>
+            <div class="setting-category-description">更多高级设置 请不要随意更改 除非你知道你在做什么</div>
+          </div>
+          <div class="setting-group">
+
+            <div class="setting-item">
+              <div class="setting-info">
+                <i class="bi bi-fonts"></i>
+                <div class="words">
+                  <div class="setting-name">全局备用字体</div>
+                  <div class="setting-descrition">当所有自定义字体均无效时 将使用这里的字体 格式和自定义字体一样</div>
+                </div>
+              </div>
+              <div class="setting-value">
+                <nav data-nav-id="nav-titbar-fade">
+                  <input class="input" type="text" data-key="fontFamilyFallback" />
+                </nav>
+              </div>
+            </div>
               
-              <!-- 添加开发者工具设置 -->
-              <div class="setting-item">
-                <div class="setting-info">
-                  <i class="bi bi-code-square"></i>
-                  <div class="words">
-                    <div class="setting-name">开发者工具</div>
-                    <div class="setting-descrition">启用后可通过F12键打开开发者工具</div>
-                  </div>
-                </div>
-                <div class="setting-value">
-                  <nav data-nav-id="nav-devtools">
-                    <a data-key="devToolsEnabled" data-value="true">启用</a>
-                    <a class="active" data-key="devToolsEnabled" data-value="false">禁用</a>
-                  </nav>
+            <!-- 添加开发者工具设置 -->
+            <div class="setting-item">
+              <div class="setting-info">
+                <i class="bi bi-code-square"></i>
+                <div class="words">
+                  <div class="setting-name">开发者工具</div>
+                  <div class="setting-descrition">启用后可通过F12键打开开发者工具</div>
                 </div>
               </div>
+              <div class="setting-value">
+                <nav data-nav-id="nav-devtools">
+                  <a data-key="devToolsEnabled" data-value="true">启用</a>
+                  <a class="active" data-key="devToolsEnabled" data-value="false">禁用</a>
+                </nav>
+              </div>
             </div>
+
           </div>
         </div>
       </div>
     </div>
-    <!-- 添加移动端播放列表浮窗 -->
-    <div class="mobile-playlist-backdrop"></div>
-    <div class="mobile-playlist">
-      <div class="playlist-drag-handle"></div>
-      <div class="mobile-playlist-header">
-        <h3 id="mobile-listname">默认歌单</h3>
-        <div class="controls">
-          <div class="playmode">
-            <i class="bi bi-repeat"></i>
-          </div>
-          <div class="rename">
-            <i class="bi bi-pencil-square"></i>
-          </div>
+  </div>
+
+  <!-- 添加移动端播放列表浮窗 -->
+  <div class="mobile-playlist-backdrop"></div>
+  <div class="mobile-playlist">
+    <div class="playlist-drag-handle"></div>
+    <div class="mobile-playlist-header">
+      <h3 id="mobile-listname">默认歌单</h3>
+      <div class="controls">
+        <div class="playmode">
+          <i class="bi bi-repeat"></i>
+        </div>
+        <div class="rename">
+          <i class="bi bi-pencil-square"></i>
         </div>
       </div>
-      <div class="mobile-playlist-content">
-        <!-- 播放列表内容会通过JS动态填充 -->
-      </div>
     </div>
+    <div class="mobile-playlist-content">
+      <!-- 播放列表内容会通过JS动态填充 -->
+    </div>
+  </div>
 
-    <!-- 添加移动端底部导航栏 -->
-    <div class="mobile-navbar">
-      <a class="active" data-page=".player">
-        <i class="bi bi-music-player"></i>
-        <span>播放</span>
-      </a>
-      <a data-page=".love-list">
-        <i class="bi bi-heart"></i>
-        <span>收藏</span>
-      </a>
-      <a class="playlist-toggle"></a>
-        <i class="bi bi-list-ul"></i>
-        <span>播放列表</span>
-        <div class="count">0</div>
-      </a>
-      <a data-page=".music-list">
-        <i class="bi bi-music-note-list"></i>
-        <span>歌单</span>
-      </a>
-      <a data-page=".setting">
-        <i class="bi bi-gear"></i>
-        <span>设置</span>
-      </a>
-    </div>
+  <!-- 添加移动端底部导航栏 -->
+  <div class="mobile-navbar">
+    <a class="active" data-page=".player">
+      <i class="bi bi-music-player"></i>
+      <span>播放</span>
+    </a>
+    <a data-page=".love-list">
+      <i class="bi bi-heart"></i>
+      <span>收藏</span>
+    </a>
+    <a class="playlist-toggle">
+      <i class="bi bi-list-ul"></i>
+      <span>播放列表</span>
+      <div class="count">0</div>
+    </a>
+    <a data-page=".music-list">
+      <i class="bi bi-music-note-list"></i>
+      <span>歌单</span>
+    </a>
+    <a data-page=".setting">
+      <i class="bi bi-gear"></i>
+      <span>设置</span>
+    </a>
+  </div>
 
-    <div class="account-options-container">
-      <div class="option" id="account-home">B站主页</div>
-      <div class="option" id="account-logout">退出登录</div>
-    </div>
+  <div class="account-options-container">
+    <div class="option" id="account-home">B站主页</div>
+    <div class="option" id="account-logout">退出登录</div>
   </div>
 
 </body>
