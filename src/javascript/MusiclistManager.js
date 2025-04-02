@@ -149,7 +149,9 @@ class MusiclistManager {
         }
 
         // 3. 更新 UI
-        this.uiManager.renderPlaylist();
+        if (this.uiManager) {
+            this.uiManager.renderPlaylist();
+        }
 
         // 设置播放但不自动播放
         if (this.playlistManager.playlist.length > 0) {
