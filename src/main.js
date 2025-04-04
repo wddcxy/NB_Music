@@ -115,11 +115,11 @@ function setupAutoUpdater(win) {
         win.webContents.send("update-error", err.message);
     });
 
-    autoUpdater.on("update-available", (info) => {
+    autoUpdater.on("update-available", (info) => {       //更新机制(有更新)
         win.webContents.send("update-available", info);
     });
 
-    autoUpdater.on("update-not-available", () => {
+    autoUpdater.on("update-not-available", () => {      //更新机制(无法更新/已是最新版本)
         win.webContents.send("update-not-available");
     });
 
@@ -127,14 +127,14 @@ function setupAutoUpdater(win) {
         win.webContents.send("download-progress", progress);
     });
 
-    autoUpdater.on("update-downloaded", () => {
+    autoUpdater.on("update-downloaded", () => {      //更新机制(已下载完成)
         win.webContents.send("update-downloaded");
 
         const dialogOpts = {
             type: "info",
             buttons: ["重启", "稍后"],
             title: "应用更新",
-            message: "有新版本已下载完成,是否重启应用?"
+            message: "有新版本已下载完成,是否重启应用?" 
         };
 
         require("electron")
@@ -150,7 +150,8 @@ function setupAutoUpdater(win) {
 
     autoUpdater.checkForUpdates();
 }
-
+/*古希腊掌管bilibili cookies的神
+-------------------------*/
 function loadCookies() {
     if (!storage.has("cookies")) return null;
     return storage.get("cookies");
@@ -185,8 +186,9 @@ async function getBilibiliCookies(skipLocalCookies = false) {
         return "";
     }
 }
+/*---------------------------------*/
 
-function getIconPath() {
+function getIconPath() {    //加载图标
     switch (process.platform) {
         case "win32":
             return path.join(__dirname, "../icons/icon.ico");
@@ -222,7 +224,7 @@ function createTrayMenu(win) {
             songInfo = songInfo.slice(0, 23) + "...";
         }
 
-        const menuTemplate = [
+        const menuTemplate = [   //按钮
             {
                 label: "🎵 NB Music",
                 enabled: false
@@ -592,7 +594,7 @@ function createWindow() {
                             response.end(fs.readFileSync(path.join(__dirname, "..", "img", "NB_Music.png")));
                         } else if (request.url === "/HarmonyOS_Sans.woff2") {
                             response.writeHead(200, { "Content-Type": "font/woff2" });
-                            response.end(fs.readFileSync(path.join(__dirname, "..", "fonts", "HarmonyOS_Sans_Medium.woff2")));
+                            response.end(fs.readFileSync(path.join(__dirname, "..", "fonts", "")));
                         } else if (request.url === "/getUserInfo") {
                             axios
                                 .get("https://api.bilibili.com/x/web-interface/nav", {
@@ -855,7 +857,7 @@ function setBilibiliRequestCookie(cookieString) {
             details.requestHeaders["Cookie"] = cookieString;
             details.requestHeaders["referer"] = "https://www.bilibili.com/";
             details.requestHeaders["user-agent"] =
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3";
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)Chrome/65.0.3325.181 Safari/537.36 OPR/52.0.2871.64"; //user-agent换成更新的标识
         }
         callback({ requestHeaders: details.requestHeaders });
     });
