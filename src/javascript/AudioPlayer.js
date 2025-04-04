@@ -1,5 +1,8 @@
-// 音频播放器类
 class AudioPlayer {
+    /**
+     * 音频播放组件
+     * @param {import("./PlaylistManager.js")} playlistManager
+     */
     constructor(playlistManager) {
         this.playlistManager = playlistManager;
         this.audio = new Audio();
@@ -7,9 +10,15 @@ class AudioPlayer {
         this.audio.loop = false;
         this.audio.volume = 0; // 将由setSettingManager覆盖
         this.volumeInterval = null;
+        /**
+         * @type {import("./SettingManager.js")}
+         */
         this.settingManager = null; // 将在初始化时设置
         this.lastProgressSaveTime = 0;
         this.isPlayRequestPending = false; // 跟踪播放请求状态
+        /**
+         * @type {import("./UIManager.js")}
+         */
         this.uimanager = null; // 将由UIManager设置
         // 添加事件系统支持
         this.eventListeners = {};

@@ -3,6 +3,13 @@ const fs = require("fs");
 const path = require("path");
 const { ipcRenderer } = require("electron");
 class MusiclistManager {
+    /**
+     * 歌单管理组件
+     * @param {import("./PlaylistManager.js")} playlistManager
+     * @param {import("./MusicSearcher.js")} musicSearcher
+     * @param {import("./CacheManager.js")} cacheManager
+     * @param {import("./LoginManager.js")} loginManager
+     */
     constructor(playlistManager, musicSearcher, cacheManager, loginManager) {
         this.playlistManager = playlistManager;
         this.musicSearcher = musicSearcher;
@@ -10,6 +17,9 @@ class MusiclistManager {
         this.playlists = [];
         this.activePlaylistIndex = 0;
         this.lyricSearchType = "auto";
+        /**
+         * @type {import("./LoginManager.js")}
+         */
         this.uiManager = null;
         this.loginManager = loginManager;
 
