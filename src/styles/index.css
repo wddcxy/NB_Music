@@ -23,6 +23,7 @@
 
 /* 导入动画 */
 @import './components/animations.css';    /* 动画样式 */
+@import './animations.css';    /* 动画样式 */
 
 /* 导入工具 */
 @import './utilities.css';

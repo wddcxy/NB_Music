@@ -159,7 +159,7 @@
       <div class="dialog-content">
         <div class="qrcode-container">
           <canvas id="qrcode"></canvas>
-          <div class="login-tips">请使用哔哩哔哩客户端扫码登录</div>
+          <div class="login-tips" id="qrcodeStatus">请使用哔哩哔哩客户端扫码登录</div>
           <a href="#" id="switchBrowser" class="switch-method hide">使用网页登录</a>
         </div>
       </div>
@@ -972,12 +972,10 @@
       <span>设置</span>
     </a>
   </div>
-
   <div class="account-options-container">
     <div class="option" id="account-home">B站主页</div>
     <div class="option" id="account-logout">退出登录</div>
   </div>
-
 </body>
 <script src="./script.js"></script>
 <script src="./mobile.js"></script>

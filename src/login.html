@@ -280,7 +280,7 @@
             color: var(--text-medium);
             background-color: rgba(0, 0, 0, 0.03);
             border-radius: 20px;
-            padding: 3px 10px;
+            padding: 3px;
             display: inline-block;
         }
         
@@ -476,7 +476,7 @@
             } else {
                 notLoginMessage.style.display = 'block';
                 userInfo.style.display = 'none';
-                loginButton.style.display = 'block';
+                loginButton.style.display = 'none';
             }
         });
 
@@ -488,7 +488,16 @@
                 loginButton.textContent = '登录成功';
 
                 window.close();
+
+                // 如果close()不起作用，就切换到空白页
                 window.location.href = 'about:blank';
+            }).catch((error) => {
+                console.error(error);
+                loginButton.textContent = '登录失败，请重试';
+
+                setTimeout(() => {
+                    loginButton.textContent = '确认登录';
+                }, 2000);
             }).finally(() => {
                 loginButton.disabled = false;
             });
