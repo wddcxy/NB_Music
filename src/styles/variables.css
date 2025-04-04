@@ -14,6 +14,7 @@
   --primary-color: #ad6eca;
   --secondary-color: #3b91d8;
   --mica-opacity: 0.5;
+  --bg-blur-amount: 20px; /* 背景模糊强度 */
   
   /* 添加交互层次变量 */
   --hover-opacity: 0.85;

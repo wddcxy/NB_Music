@@ -24,6 +24,13 @@
   width: 14px;
 }
 
+/* 添加背景模糊效果 */
+.mica, .dialog, .video-dialog, .sidebar {
+  backdrop-filter: blur(var(--bg-blur-amount, 10px));
+  -webkit-backdrop-filter: blur(var(--bg-blur-amount, 10px));
+}
+
+/* 其它增强滚动条样式 */
 ::-webkit-scrollbar-corner {
   display: none;
 }

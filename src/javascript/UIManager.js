@@ -1398,7 +1398,6 @@ class UIManager {
                 
                 // 更新时间预览位置和内容
                 timePreview.style.left = `${e.clientX - rect.left}px`;
-                timePreview.textContent = this.formatTime(time);
             });
             
             // 监听鼠标按下和移动
