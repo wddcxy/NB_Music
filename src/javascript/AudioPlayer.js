@@ -43,7 +43,7 @@ class AudioPlayer {
             console.error('音频播放错误:', e);
             this.isPlayRequestPending = false;
             if (this.uimanager) {
-                this.uimanager.showNotification('播放出错，正在尝试恢复...', 'warning');
+                this.uimanager.showNotification('正在重试...', 'warning');
                 // 尝试重新加载当前歌曲
                 setTimeout(() => {
                     if (this.playlistManager && this.playlistManager.playlist.length > 0) {
@@ -224,7 +224,7 @@ class AudioPlayer {
             document.querySelector(".control>.buttons>.play").classList = "play paused";
             this.isPlayRequestPending = false;
             if (this.uimanager) {
-                this.uimanager.showNotification("播放失败，正在重试...", "error");
+                this.uimanager.showNotification("正在重试...", "error");
             }
             // 添加短暂延迟再重试，避免立即重试可能导致的同样错误
             setTimeout(() => {
