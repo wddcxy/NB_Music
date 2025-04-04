@@ -14,6 +14,7 @@ class SettingManager {
         primaryColor: SettingManager.DEFAULT_PRIMARY_COLOR, // 默认主色
         secondaryColor: SettingManager.DEFAULT_SECONDARY_COLOR, // 默认次色
         micaOpacity: 0.5, // 默认Mica透明度
+        bgBlurAmount: 20, // 默认背景模糊强度
         background: "video",
         autoMaximize: false,
 
@@ -53,6 +54,12 @@ class SettingManager {
         this.applyFontFamily();
         this.applyFontSize();
         this.fetchContributors(); // 获取项目贡献者信息
+        this.uiManager = null; // 初始化为null，后续设置
+    }
+
+    // 添加setter方法用于设置UIManager引用
+    setUIManager(uiManager) {
+        this.uiManager = uiManager;
     }
 
     loadSettings() {
@@ -212,7 +219,9 @@ class SettingManager {
                 this.applyThemeColors();
 
                 // 显示通知
-                this.showNotification("主题颜色已重置", "success");
+                if (this.uiManager) {
+                    this.uiManager.showNotification("主题颜色已重置", "success");
+                }
             });
         }
         // 初始应用主题色
@@ -224,6 +233,14 @@ class SettingManager {
             "透明度已重置",
             (value) => `${Math.round(value * 100)}%`,
             () => this.applyMicaOpacity()
+        );
+
+        this.sliderSetting(
+            "bgBlurAmount",
+            20,
+            "背景模糊强度已重置",
+            (value) => `${value}px`,
+            () => this.applyBgBlur()
         );
 
         this.sliderSetting(
@@ -263,7 +280,9 @@ class SettingManager {
                 afterValueApply();
 
                 // 显示通知
-                this.showNotification(resetText, "success");
+                if (this.uiManager) {
+                    this.uiManager.showNotification(resetText, "success");
+                }
             });
         }
         afterValueApply();
@@ -278,6 +297,11 @@ class SettingManager {
     applyMicaOpacity() {
         const root = document.documentElement;
         root.style.setProperty("--mica-opacity", this.settings.micaOpacity);
+    }
+
+    applyBgBlur() {
+        const root = document.documentElement;
+        root.style.setProperty("--bg-blur-amount", `${this.settings.bgBlurAmount}px`);
     }
 
     applyFontFamily() {
@@ -309,9 +333,14 @@ class SettingManager {
             case "micaOpacity":
                 this.applyMicaOpacity();
                 break;
+            case "bgBlurAmount":
+                this.applyBgBlur();
+                break;
             case "videoQuality":
                 // 视频质量变更时无需即时应用，下次加载视频时会使用新设置
-                this.showNotification(`背景视频质量已设置为 ${this.getQualityName(value)}`, "success");
+                if (this.uiManager) {
+                    this.uiManager.showNotification(`背景视频质量已设置为 ${this.getQualityName(value)}`, "success");
+                }
                 break;
             case "fontFamilyCustom":
             case "fontFamilyFallback":
@@ -451,7 +480,9 @@ class SettingManager {
             localStorage.removeItem("videoCache");
 
             // 显示通知
-            this.showNotification("缓存已清除", "success");
+            if (this.uiManager) {
+                this.uiManager.showNotification("缓存已清除", "success");
+            }
 
             // 可以添加其他缓存清理逻辑
             if (window.app && window.app.cacheManager) {
@@ -459,16 +490,9 @@ class SettingManager {
             }
         } catch (error) {
             console.error("清除缓存失败:", error);
-            this.showNotification("清除缓存失败", "error");
-        }
-    }
-
-    showNotification(message, type = "info") {
-        // 实现通知显示逻辑 - 利用type参数设置通知样式
-        if (window.app && window.app.uiManager) {
-            window.app.uiManager.showNotification(message, type);
-        } else {
-            console.log(`[${type}] ${message}`);
+            if (this.uiManager) {
+                this.uiManager.showNotification("清除缓存失败", "error");
+            }
         }
     }
 
@@ -497,7 +521,9 @@ class SettingManager {
                 window.app.updateManager.show();
                 window.app.updateManager.showStatus("正在检查更新...");
             } else {
-                this.showNotification("更新管理器未初始化", "error");
+                if (this.uiManager) {
+                    this.uiManager.showNotification("更新管理器未初始化", "error");
+                }
             }
         });
 

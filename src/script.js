@@ -127,6 +127,11 @@ class App {
             this.settingManager.playlistManager = this.playlistManager;
         }
 
+        // 确保SettingManager能访问UIManager
+        if (this.settingManager && this.uiManager) {
+            this.settingManager.setUIManager(this.uiManager);
+        }
+
         // 确保MusicSearcher能获取设置信息
         if (this.musicSearcher && this.settingManager) {
             this.musicSearcher.setDependencies(this.settingManager);
