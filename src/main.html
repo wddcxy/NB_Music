@@ -159,7 +159,7 @@
       <div class="dialog-content">
         <div class="qrcode-container">
           <canvas id="qrcode"></canvas>
-          <div class="login-tips">请使用哔哩哔哩客户端扫码登录</div>
+          <div class="login-tips" id="qrcodeStatus">请使用哔哩哔哩客户端扫码登录</div>
           <a href="#" id="switchBrowser" class="switch-method hide">使用网页登录</a>
         </div>
       </div>
@@ -179,6 +179,60 @@
       <div class="dialog-footer">
         <button id="reOpenBrowser" class="dialog-btn dialog-btn-secondary">重新打开授权页面</button>
         <button id="cancelLogin2" class="dialog-btn dialog-btn-primary">取消</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="dialog-bg hide" id="audioEffectDialog">
+    <div class="dialog" id="audioEffect">
+      <div class="dialog-header">
+        <h2>音效调节</h2>
+        <button class="close-btn" id="closeVideoDialog"><i class="bi bi-x-lg"></i></button>
+      </div>
+      <div class="equalizer-container">
+        <h3>均衡器</h3>
+        <div class="equalizer">
+          <div class="equalizer-item">
+            <input type="range" id="equalizer-1" min="-12" max="12" step="any" class="slider vertical" data-adjust="100" />
+            <div class="label">100Hz</div>
+          </div>
+          <div class="equalizer-item">
+            <input type="range" id="equalizer-2" min="-12" max="12" step="any" class="slider vertical" data-adjust="200" />
+            <div class="label">200Hz</div>
+          </div>
+          <div class="equalizer-item">
+            <input type="range" id="equalizer-3" min="-12" max="12" step="any" class="slider vertical" data-adjust="400" />
+            <div class="label">400Hz</div>
+          </div>
+          <div class="equalizer-item">
+            <input type="range" id="equalizer-4" min="-12" max="12" step="any" class="slider vertical" data-adjust="600" />
+            <div class="label">600Hz</div>
+          </div>
+          <div class="equalizer-item">
+            <input type="range" id="equalizer-5" min="-12" max="12" step="any" class="slider vertical" data-adjust="1000" />
+            <div class="label">1KHz</div>
+          </div>
+          <div class="equalizer-item">
+            <input type="range" id="equalizer-6" min="-12" max="12" step="any" class="slider vertical" data-adjust="3000" />
+            <div class="label">3KHz</div>
+          </div>
+          <div class="equalizer-item">
+            <input type="range" id="equalizer-7" min="-12" max="12" step="any" class="slider vertical" data-adjust="6000" />
+            <div class="label">6KHz</div>
+          </div>
+          <div class="equalizer-item">
+            <input type="range" id="equalizer-8" min="-12" max="12" step="any" class="slider vertical" data-adjust="12000" />
+            <div class="label">12KHz</div>
+          </div>
+          <div class="equalizer-item">
+            <input type="range" id="equalizer-9" min="-12" max="12" step="any" class="slider vertical" data-adjust="14000" />
+            <div class="label">14KHz</div>
+          </div>
+          <div class="equalizer-item">
+            <input type="range" id="equalizer-10" min="-12" max="12" step="any" class="slider vertical" data-adjust="16000" />
+            <div class="label">16KHz</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
@@ -360,9 +414,10 @@
                 </div>
               </div>
               <div class="play-container" style="position: relative;">
-                <button class="import-btn"><i class="bi bi-download"></i></button>
+                <button class="import-btn download"><i class="bi bi-download"></i></button>
                 <button class="play-video-btn import-btn" id="playVideoBtn"><i class="bi bi-film"></i></button>
                 <button class="import-btn" id="VolCtrlBtn"><i class="bi bi-volume-down-fill" style="transform: scale(1.5);"></i></button>
+                <button class="effect-btn import-btn"><i class="bi bi-sliders2-vertical"></i></button>
             </div>
               <!-- <button class="local-import-btn import-btn" id="localImportBtn"><i class="bi bi-file-earmark-music"></i></button> -->
             </div>
@@ -990,12 +1045,10 @@
       <span>设置</span>
     </a>
   </div>
-
   <div class="account-options-container">
     <div class="option" id="account-home">B站主页</div>
     <div class="option" id="account-logout">退出登录</div>
   </div>
-
 </body>
 <script src="./script.js"></script>
 <script src="./mobile.js"></script>

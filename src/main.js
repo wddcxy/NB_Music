@@ -63,12 +63,7 @@ function applyWindowState(win) {
 
             for (const display of displays) {
                 const bounds = display.bounds;
-                if (
-                    state.x >= bounds.x &&
-                    state.y >= bounds.y &&
-                    state.x < bounds.x + bounds.width &&
-                    state.y < bounds.y + bounds.height
-                ) {
+                if (state.x >= bounds.x && state.y >= bounds.y && state.x < bounds.x + bounds.width && state.y < bounds.y + bounds.height) {
                     isVisible = true;
                     break;
                 }
@@ -592,9 +587,6 @@ function createWindow() {
                         } else if (request.url === "/background.png") {
                             response.writeHead(200, { "Content-Type": "image/png" });
                             response.end(fs.readFileSync(path.join(__dirname, "..", "img", "NB_Music.png")));
-                        } else if (request.url === "/HarmonyOS_Sans_Medium.woff2") {
-                            response.writeHead(200, { "Content-Type": "font/woff2" });
-                            response.end(fs.readFileSync(path.join(__dirname, "..", "fonts", "HarmonyOS_Sans_Medium.woff2")));
                         } else if (request.url === "/getUserInfo") {
                             axios
                                 .get("https://api.bilibili.com/x/web-interface/nav", {
@@ -848,16 +840,10 @@ app.commandLine.appendSwitch("disable-background-timer-throttling");
 
 function setBilibiliRequestCookie(cookieString) {
     session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
-        if (
-            details.url.includes("bilibili.com") ||
-            details.url.includes("bilivideo.cn") ||
-            details.url.includes("bilivideo.com") ||
-            details.url.includes("akamaized.net")
-        ) {
+        if (details.url.includes("bilibili.com") || details.url.includes("bilivideo.cn") || details.url.includes("bilivideo.com") || details.url.includes("akamaized.net")) {
             details.requestHeaders["Cookie"] = cookieString;
-            details.requestHeaders["referer"] = "https://www.bilibili.com/";
-            details.requestHeaders["user-agent"] =
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko)Chrome/65.0.3325.181 Safari/537.36 OPR/52.0.2871.64"; //user-agent换成更新的标识
+            details.requestHeaders["Referer"] = "https://www.bilibili.com/";
+            details.requestHeaders["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36";
         }
         callback({ requestHeaders: details.requestHeaders });
     });

@@ -1,6 +1,11 @@
 const { createObservableArray } = require("../utils.js");
 
 class FavoriteManager {
+    /**
+     * 收藏管理组件
+     * @param {import("./PlaylistManager.js")} playlistManager 
+     * @param {import("./UIManager.js")} uiManager 
+     */
     constructor(playlistManager, uiManager) {
         this.playlistManager = playlistManager;
         this.uiManager = uiManager;

@@ -10,9 +10,7 @@
 - 一键导入B站收藏夹当歌单
 - 智能歌词捕捉系统（自动匹配+手动补全双保险）
 
-**初中生の黑科技宣言**：我们才不是只会做题的小可爱！用Electron+各大API，带你体验真正的白嫖听歌自由ψ(｀∇´)ψ
-
-哦，对了！我们基于以下开源项目，感谢他们！
+哦，对了！我们主要基于以下开源项目，感谢他们！
 - [neteasecloudmusicapi](https://gitlab.com/Binaryify/neteasecloudmusicapi) 网易云API(Github仓库已经寄了)
 - [BillBill Api Collect](https://github.com/SocialSisterYi/bilibili-API-collect) B站API
 ---

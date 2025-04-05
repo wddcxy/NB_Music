@@ -2,8 +2,10 @@ const axios = require("axios");
 const md5 = require("md5");
 const { lyric_new, search } = require("NeteaseCloudMusicApi");
 
-// 音乐搜索类
 class MusicSearcher {
+    /**
+     * 音乐搜索组件
+     */
     constructor() {
         this.COOKIE = "";
         this.settingManager = null; // 将由外部设置

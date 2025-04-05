@@ -1,5 +1,11 @@
 //歌词渲染类
 class LyricsPlayer {
+    /**
+     * 歌词播放组件
+     * @param {String} lyricsString
+     * @param {HTMLAudioElement} audioElement
+     * @param {import("./SettingManager.js")} settingManager
+     */
     constructor(lyricsString, audioElement, settingManager) {
         this.lyricsContainer = document.getElementById("lyrics-container");
         this.lyricsContainer.innerHTML = "";
@@ -15,33 +21,33 @@ class LyricsPlayer {
         this.desktopLyricsEnabled = false;
         this.currentSongInfo = null;
         this.ipcRenderer = null;
-        
+
         // 循环歌词同步相关属性
-        this.isLoopDetected = false;       // 是否检测到循环歌曲
-        this.originalSongDuration = null;  // 原始歌曲时长（毫秒）
-        this.loopDetectionThreshold = 20;  // 循环检测阈值（秒）
-        this.lastLyricTimestamp = 0;       // 最后一句歌词的时间戳
-        
+        this.isLoopDetected = false; // 是否检测到循环歌曲
+        this.originalSongDuration = null; // 原始歌曲时长（毫秒）
+        this.loopDetectionThreshold = 20; // 循环检测阈值（秒）
+        this.lastLyricTimestamp = 0; // 最后一句歌词的时间戳
+
         // 检查是否在Electron环境中
-        if (typeof require !== 'undefined') {
+        if (typeof require !== "undefined") {
             try {
-                const { ipcRenderer } = require('electron');
+                const { ipcRenderer } = require("electron");
                 this.ipcRenderer = ipcRenderer;
-                
+
                 // 监听桌面歌词状态变化
-                this.ipcRenderer.on('desktop-lyrics-closed', () => {
+                this.ipcRenderer.on("desktop-lyrics-closed", () => {
                     this.desktopLyricsEnabled = false;
                     this.updateDesktopLyricsButton();
                 });
-                
-                this.ipcRenderer.on('desktop-lyrics-ready', () => {
+
+                this.ipcRenderer.on("desktop-lyrics-ready", () => {
                     this.desktopLyricsEnabled = true;
                     this.updateDesktopLyricsButton();
                     this.syncDesktopLyrics();
                 });
-                
+
                 // 监听主窗口最小化事件
-                this.ipcRenderer.on('window-minimized', () => {
+                this.ipcRenderer.on("window-minimized", () => {
                     this.isWindowMinimized = true;
                     // 立即同步一次，确保歌词是最新的
                     if (this.desktopLyricsEnabled) {
@@ -50,44 +56,44 @@ class LyricsPlayer {
                         this.startBackgroundSync();
                     }
                 });
-                
-                this.ipcRenderer.on('window-restored', () => {
+
+                this.ipcRenderer.on("window-restored", () => {
                     this.isWindowMinimized = false;
                     // 停止后台同步
                     this.stopBackgroundSync();
                 });
-                
+
                 // 响应主进程请求同步歌词
-                this.ipcRenderer.on('request-lyrics-sync', () => {
+                this.ipcRenderer.on("request-lyrics-sync", () => {
                     if (this.desktopLyricsEnabled) {
                         this.syncDesktopLyrics();
                     }
                 });
-                
+
                 // 响应桌面歌词发送的控制命令
-                this.ipcRenderer.on('desktop-lyrics-control', (_, command, data) => {
-                    if (command === 'toggle-play') {
+                this.ipcRenderer.on("desktop-lyrics-control", (_, command, data) => {
+                    if (command === "toggle-play") {
                         // 切换播放/暂停
                         if (this.audio.paused) {
                             this.audio.play();
                         } else {
                             this.audio.pause();
                         }
-                    } else if (command === 'seek' && typeof data === 'number') {
+                    } else if (command === "seek" && typeof data === "number") {
                         // 跳转到指定时间
                         if (!isNaN(data) && this.audio.duration) {
                             this.audio.currentTime = Math.max(0, Math.min(data, this.audio.duration));
                         }
                     }
                 });
-                
+
                 // 检查桌面歌词设置
-                this.desktopLyricsEnabled = this.settingManager.getSetting('desktopLyricsEnabled') === 'true';
+                this.desktopLyricsEnabled = this.settingManager.getSetting("desktopLyricsEnabled") === "true";
                 if (this.desktopLyricsEnabled) {
-                    this.ipcRenderer.send('toggle-desktop-lyrics', true);
+                    this.ipcRenderer.send("toggle-desktop-lyrics", true);
                 }
             } catch (error) {
-                console.error('初始化IPC失败:', error);
+                console.error("初始化IPC失败:", error);
             }
         }
 
@@ -111,11 +117,11 @@ class LyricsPlayer {
         // 添加页面可见性状态检测
         this.isVisible = true;
         this.resizeObserver = null;
-        
+
         // 初始化可见性监听
         this.initVisibilityObserver();
-        
-        this.setVisibility(this.settingManager.getSetting('lyricsEnabled')=="true");
+
+        this.setVisibility(this.settingManager.getSetting("lyricsEnabled") == "true");
         this.init();
 
         // 添加歌词点击事件处理
@@ -130,17 +136,17 @@ class LyricsPlayer {
         let lyricIndex = 0; // 跟踪实际歌词的索引
         let visibleLyricCount = 0; // 记录显示的歌词行数量
         const maxVisibleLyrics = 7; // 初始状态下最多显示的歌词行数
-        
+
         this.parsedData.forEach((data) => {
             const element = data.type === "metadata" ? this.createMetadataElement(data) : this.createLyricElement(data);
             if (data.type === "lyric") {
                 // 添加数据索引属性，便于调试和确保索引正确
                 element.setAttribute("data-lyric-index", lyricIndex);
                 element.setAttribute("data-time", `[${Math.floor(data.lineStart / 60000)}:${((data.lineStart % 60000) / 1000).toFixed(2)}]`);
-                
+
                 // 添加初始过渡动画类
                 element.classList.add("initial");
-                
+
                 // 只显示前maxVisibleLyrics行，其余隐藏
                 if (visibleLyricCount < maxVisibleLyrics) {
                     // 根据位置分配样式类和位置
@@ -153,7 +159,7 @@ class LyricsPlayer {
                         element.style.top = `${50 + visibleLyricCount * 60}px`;
                         element.classList.add(`after-${visibleLyricCount}`);
                     }
-                    
+
                     visibleLyricCount++;
                 } else {
                     // 超过最大显示数量的歌词行初始设为不可见
@@ -161,19 +167,19 @@ class LyricsPlayer {
                     element.style.top = "200%";
                     element.classList.add("hidden");
                 }
-                
+
                 // 延迟一小段时间后移除初始类，以确保过渡动画生效
                 setTimeout(() => {
                     element.classList.remove("initial");
                 }, 500);
-                
+
                 lyricIndex++;
             }
             this.scrollWrapper.appendChild(element);
         });
-        
+
         // 如果存在歌词，初始显示第一屏
-        if (this.parsedData.some(data => data.type === "lyric")) {
+        if (this.parsedData.some((data) => data.type === "lyric")) {
             setTimeout(() => {
                 this.setupInitialView();
             }, 100);
@@ -183,37 +189,36 @@ class LyricsPlayer {
     setupInitialView() {
         const lyricLines = Array.from(this.scrollWrapper.querySelectorAll(".lyric-line"));
         const containerHeight = this.lyricsContainer.clientHeight;
-        
+
         // 计算中心点位置
         const centerY = containerHeight / 2;
-        
+
         // 最多显示7行
         const maxVisible = 7;
         const visibleLines = lyricLines.slice(0, maxVisible);
-        
+
         // 先隐藏所有行
-        lyricLines.forEach(line => {
-            line.classList.remove("active", "before-1", "before-2", "before-3", 
-                               "after-1", "after-2", "after-3", "distant");
+        lyricLines.forEach((line) => {
+            line.classList.remove("active", "before-1", "before-2", "before-3", "after-1", "after-2", "after-3", "distant");
             line.classList.add("distant");
             line.style.opacity = "0";
         });
-        
+
         // 设置可见行的位置
         visibleLines.forEach((line, index) => {
             line.classList.remove("distant");
             line.style.opacity = "";
-            
+
             if (index === 0) {
                 // 第一行放在中央
                 line.style.top = `${centerY - line.offsetHeight / 2}px`;
             } else {
                 // 后面的行依次往下
                 line.classList.add(`after-${index}`);
-                line.style.top = `${centerY - line.offsetHeight / 2 + (index * 60)}px`;
+                line.style.top = `${centerY - line.offsetHeight / 2 + index * 60}px`;
             }
         });
-        
+
         // 标记我们已经显示了初始视图
         this.initialViewDisplayed = true;
     }
@@ -223,7 +228,7 @@ class LyricsPlayer {
             // this.lyricsContainer.style.opacity = visible ? '1' : '0';
             // this.lyricsContainer.style.width = visible ? '' : '0';
             this.lyricsContainer.style.display = visible ? "" : "none";
-            
+
             // 如果正在显示并且容器可见，刷新布局
             if (visible && this.isVisible) {
                 setTimeout(() => this.refreshLayout(), 50);
@@ -238,27 +243,27 @@ class LyricsPlayer {
         this.activeLineIndex = -1;
         this.previousActiveIndex = -1;
         this.scrollWrapper.innerHTML = "";
-        
+
         // 重置循环检测状态
         this.isLoopDetected = false;
         this.originalSongDuration = null;
         this.lastLyricTimestamp = 0;
-        
+
         this.parsedData = this.parseLyrics(newLyricsString);
         this.init();
-        
+
         // 添加一个小延迟，等待DOM更新后刷新布局
         setTimeout(() => {
             if (this.isVisible) {
                 this.refreshLayout();
             }
         }, 50);
-        
+
         // 同步桌面歌词
         if (this.desktopLyricsEnabled) {
             this.syncDesktopLyrics();
         }
-        
+
         if (!this.audio.paused) {
             this.start();
         }
@@ -339,18 +344,18 @@ class LyricsPlayer {
                 }
             });
         }
-        
+
         // 计算最后一行歌词的时间点
         this.lastLyricTimestamp = 0;
-        const lyricData = parsedData.filter(data => data.type === "lyric");
+        const lyricData = parsedData.filter((data) => data.type === "lyric");
         if (lyricData.length > 0) {
             const lastLyric = lyricData[lyricData.length - 1];
             this.lastLyricTimestamp = lastLyric.lineStart + lastLyric.lineDuration;
-            
+
             // 尝试检测循环歌曲，延迟执行以确保audio元数据已加载
             setTimeout(() => this.detectLoopSong(), 2000);
         }
-        
+
         return parsedData;
     }
 
@@ -389,32 +394,30 @@ class LyricsPlayer {
     detectLoopSong() {
         try {
             // 检查设置是否启用了循环歌词功能
-            if (this.settingManager && this.settingManager.getSetting('loopLyricsEnabled') !== 'true') {
+            if (this.settingManager && this.settingManager.getSetting("loopLyricsEnabled") !== "true") {
                 this.isLoopDetected = false;
                 return false;
             }
-            
+
             // 必须有最后一行歌词时间戳和音频时长
             if (!this.lastLyricTimestamp || !this.audio || !this.audio.duration) {
                 this.isLoopDetected = false;
                 return false;
             }
-            
+
             // 将音频时长转为毫秒
             const videoDuration = this.audio.duration * 1000;
-            
+
             // 如果视频时长超过歌词时长的1.5倍，认为是循环视频
             if (videoDuration > this.lastLyricTimestamp * 1.5) {
                 // 使用歌词时长作为单次循环的大致时长
                 this.originalSongDuration = this.lastLyricTimestamp;
                 this.isLoopDetected = true;
-                
-                console.log("检测到循环歌曲，单次歌曲时长约为:", 
-                            this.originalSongDuration / 1000, "秒，总时长:", 
-                            videoDuration / 1000, "秒");
+
+                console.log("检测到循环歌曲，单次歌曲时长约为:", this.originalSongDuration / 1000, "秒，总时长:", videoDuration / 1000, "秒");
                 return true;
             }
-            
+
             this.isLoopDetected = false;
             return false;
         } catch (error) {
@@ -423,29 +426,28 @@ class LyricsPlayer {
             return false;
         }
     }
-    
+
     // 重置歌词状态，用于循环开始时
     resetLyricsState() {
         // 清除所有激活状态
         this.activeLines.clear();
         this.completedLines.clear();
-        
+
         // 重置行索引
         this.activeLineIndex = -1;
         this.previousActiveIndex = -1;
-        
+
         if (this.isVisible) {
             // 重置DOM元素状态
             Array.from(this.scrollWrapper.querySelectorAll(".char")).forEach((char) => {
                 char.classList.remove("active", "completed");
             });
-            
+
             // 重置行位置类
             Array.from(this.scrollWrapper.querySelectorAll(".lyric-line")).forEach((line) => {
-                line.classList.remove("active", "before-1", "before-2", "before-3", 
-                                   "after-1", "after-2", "after-3", "distant");
+                line.classList.remove("active", "before-1", "before-2", "before-3", "after-1", "after-2", "after-3", "distant");
             });
-            
+
             // 重新初始化视图
             this.setupInitialView();
         }
@@ -468,11 +470,11 @@ class LyricsPlayer {
         this.activeLines.clear();
         this.completedLines.clear();
         this.previousActiveIndex = -1;
-        
+
         Array.from(this.scrollWrapper.querySelectorAll(".char")).forEach((char) => {
             char.classList.remove("active", "completed");
         });
-        
+
         // 重置行位置类
         Array.from(this.scrollWrapper.querySelectorAll(".lyric-line")).forEach((line) => {
             line.classList.remove("active", "before-1", "before-2", "before-3", "after-1", "after-2", "after-3", "distant");
@@ -483,45 +485,41 @@ class LyricsPlayer {
         // 只有当scrollWrapper不存在时才返回，即使页面不可见也继续计算
         // 这样在页面重新显示时动画状态是最新的
         if (!this.scrollWrapper) return;
-        
+
         // 基本时间计算
         let currentTime = this.audio.currentTime * 1000; // 毫秒
-        
+
         // 循环歌曲时间处理
-        if (this.isLoopDetected && this.originalSongDuration && 
-            this.settingManager.getSetting('loopLyricsEnabled') === 'true') {
-            
+        if (this.isLoopDetected && this.originalSongDuration && this.settingManager.getSetting("loopLyricsEnabled") === "true") {
             // 计算循环周期
             const loopIndex = Math.floor(currentTime / this.originalSongDuration);
-            
+
             // 计算循环内的相对时间
             const relativeTime = currentTime % this.originalSongDuration;
-            
+
             // 使用相对时间处理歌词
             currentTime = relativeTime;
-            
+
             // 如果检测到刚开始新的循环（防止频繁触发）
             if (relativeTime < 100 && loopIndex > 0) {
                 // 重置歌词状态
                 this.resetLyricsState();
             }
         }
-        
+
         let activeLineFound = -1;
         let anyCharActive = false;
 
         // 获取所有歌词行元素，过滤掉metadata元素
-        const lyricElements = Array.from(this.scrollWrapper.children).filter(
-            el => !el.classList.contains("metadata")
-        );
-        
+        const lyricElements = Array.from(this.scrollWrapper.children).filter((el) => !el.classList.contains("metadata"));
+
         // 循环所有歌词数据
         let lyricIndex = 0;
         this.parsedData.forEach((data) => {
             if (data.type === "lyric") {
                 const line = lyricElements[lyricIndex]; // 使用歌词索引而不是数据索引
                 if (!line) return;
-                
+
                 const chars = Array.from(line.children);
                 let hasActiveChar = false;
                 let allCompleted = true;
@@ -529,7 +527,7 @@ class LyricsPlayer {
                 data.chars.forEach((char, index) => {
                     const charElement = chars[index];
                     if (!charElement) return;
-                    
+
                     const charStartTime = char.startTime;
                     const charEndTime = char.startTime + char.duration;
 
@@ -563,7 +561,7 @@ class LyricsPlayer {
                 if (allCompleted) {
                     this.completedLines.add(lyricIndex);
                 }
-                
+
                 // 只增加歌词索引计数器
                 lyricIndex++;
             }
@@ -574,31 +572,27 @@ class LyricsPlayer {
         const effectivePreviousIndex = this.activeLineIndex !== -1 ? this.activeLineIndex : null;
 
         // 判断是否需要更新行位置，仅在页面可见时才更新DOM
-        if (this.isVisible && 
-            ((effectiveActiveIndex !== null && effectiveActiveIndex !== effectivePreviousIndex) || 
-            (!anyCharActive && effectivePreviousIndex !== null))) {
-            
+        if (this.isVisible && ((effectiveActiveIndex !== null && effectiveActiveIndex !== effectivePreviousIndex) || (!anyCharActive && effectivePreviousIndex !== null))) {
             // 记录上一个激活行
             if (effectiveActiveIndex !== null) {
                 this.previousActiveIndex = this.activeLineIndex;
                 this.activeLineIndex = activeLineFound;
-                
+
                 // 标记至少有一行被激活过，从初始视图切换到动态视图
                 this.hadActiveLines = true;
-                
+
                 // 同步桌面歌词显示
                 if (this.desktopLyricsEnabled) {
                     this.syncDesktopLyrics();
                 }
             }
-            
+
             // 调用更新行位置方法
             this.updateLinePositions(activeLineFound, anyCharActive);
         }
 
         // 如果主窗口最小化且有桌面歌词，确保继续同步
-        if (this.isWindowMinimized && this.desktopLyricsEnabled && 
-            effectiveActiveIndex !== null && effectiveActiveIndex !== this.lastSyncedIndex) {
+        if (this.isWindowMinimized && this.desktopLyricsEnabled && effectiveActiveIndex !== null && effectiveActiveIndex !== this.lastSyncedIndex) {
             this.syncDesktopLyrics();
             this.lastSyncedIndex = effectiveActiveIndex;
         }
@@ -616,95 +610,86 @@ class LyricsPlayer {
             }
             return;
         }
-        
+
         // 标记我们已经有过激活行
         this.hadActiveLines = true;
-        
+
         // 如果没有激活行但有上一次激活行，则使用上一次激活行的位置，但不应用激活样式
         const displayIndex = activeIndex !== -1 ? activeIndex : this.activeLineIndex;
-        
+
         // 只获取歌词行元素，排除metadata元素
         const lyricLines = Array.from(this.scrollWrapper.querySelectorAll(".lyric-line"));
-        
+
         // 重置所有行的样式
-        lyricLines.forEach(line => {
-            line.classList.remove("active", "before-1", "before-2", "before-3", 
-                               "after-1", "after-2", "after-3", "distant", "hidden");
-            
+        lyricLines.forEach((line) => {
+            line.classList.remove("active", "before-1", "before-2", "before-3", "after-1", "after-2", "after-3", "distant", "hidden");
+
             // 默认先将所有行设为不可见
             line.style.opacity = "0";
         });
-        
+
         // 获取容器的高度用于计算中心位置
         const containerHeight = this.lyricsContainer.clientHeight;
-        
+
         // 确保displayIndex在有效范围内
         if (displayIndex >= 0 && displayIndex < lyricLines.length) {
             // 计算要显示的行索引范围
             const startIdx = Math.max(0, displayIndex - 3);
             const endIdx = Math.min(lyricLines.length - 1, displayIndex + 3);
-            
+
             // 遍历所有行并更新位置
             lyricLines.forEach((line, index) => {
                 // 确定行是否在可见范围内
                 const isVisible = index >= startIdx && index <= endIdx;
-                
+
                 // 设置可见性
                 line.style.opacity = isVisible ? "" : "0";
-                
+
                 // 只在有激活字符且索引匹配时才将该行标记为active
                 if (index === activeIndex && hasActiveChar) {
                     line.classList.add("active");
                 }
-                
+
                 // 根据行与显示行的相对位置设置样式和位置
                 if (index === displayIndex) {
                     line.style.top = `${containerHeight / 2 - line.offsetHeight / 2}px`;
-                } 
-                else if (index === displayIndex - 1) {
+                } else if (index === displayIndex - 1) {
                     line.classList.add("before-1");
                     setTimeout(() => {
                         line.style.top = `${containerHeight / 2 - line.offsetHeight / 2 - 60}px`;
                     }, 50);
-                }
-                else if (index === displayIndex - 2) {
+                } else if (index === displayIndex - 2) {
                     line.classList.add("before-2");
                     setTimeout(() => {
                         line.style.top = `${containerHeight / 2 - line.offsetHeight / 2 - 110}px`;
                     }, 100);
-                }
-                else if (index === displayIndex - 3) {
+                } else if (index === displayIndex - 3) {
                     line.classList.add("before-3");
                     setTimeout(() => {
                         line.style.top = `${containerHeight / 2 - line.offsetHeight / 2 - 160}px`;
                     }, 150);
-                }
-                else if (index < displayIndex - 3) {
+                } else if (index < displayIndex - 3) {
                     line.classList.add("distant");
                     setTimeout(() => {
                         line.style.top = `${containerHeight / 2 - line.offsetHeight / 2 - 200}px`;
                     }, 200);
-                }
-                else if (index === displayIndex + 1) {
+                } else if (index === displayIndex + 1) {
                     line.classList.add("after-1");
                     // 下方行的动画延迟，创造瀑布落下效果
                     setTimeout(() => {
                         line.style.top = `${containerHeight / 2 - line.offsetHeight / 2 + 60}px`;
                     }, 50);
-                }
-                else if (index === displayIndex + 2) {
+                } else if (index === displayIndex + 2) {
                     line.classList.add("after-2");
                     setTimeout(() => {
                         line.style.top = `${containerHeight / 2 - line.offsetHeight / 2 + 110}px`;
                     }, 100);
-                }
-                else if (index === displayIndex + 3) {
+                } else if (index === displayIndex + 3) {
                     line.classList.add("after-3");
                     setTimeout(() => {
                         line.style.top = `${containerHeight / 2 - line.offsetHeight / 2 + 160}px`;
                     }, 150);
-                }
-                else if (index > displayIndex + 3) {
+                } else if (index > displayIndex + 3) {
                     line.classList.add("distant");
                     setTimeout(() => {
                         line.style.top = `${containerHeight / 2 - line.offsetHeight / 2 + 200}px`;
@@ -712,12 +697,9 @@ class LyricsPlayer {
                 }
             });
         }
-        
+
         // 应用瀑布效果，确保索引有效
-        if (this.previousActiveIndex !== -1 && 
-            this.activeLineIndex !== -1 && 
-            this.previousActiveIndex < this.activeLineIndex) {
-            
+        if (this.previousActiveIndex !== -1 && this.activeLineIndex !== -1 && this.previousActiveIndex < this.activeLineIndex) {
             for (let i = this.previousActiveIndex; i < this.activeLineIndex; i++) {
                 if (i >= 0 && i < lyricLines.length) {
                     const delay = (i - this.previousActiveIndex) * 120;
@@ -733,7 +715,7 @@ class LyricsPlayer {
     applyWaterfallEffect(lineElement, lineIndex, activeIndex) {
         const containerHeight = this.lyricsContainer.clientHeight;
         const distance = activeIndex - lineIndex;
-        
+
         // 根据到活跃行的距离计算位置
         let position;
         if (distance === 1) {
@@ -746,7 +728,7 @@ class LyricsPlayer {
             position = containerHeight / 2 - lineElement.offsetHeight / 2 - 160;
             lineElement.classList.add("before-3");
         }
-        
+
         // 应用位置
         lineElement.style.top = `${position}px`;
     }
@@ -754,7 +736,7 @@ class LyricsPlayer {
     initVisibilityObserver() {
         // 监听容器尺寸变化
         if (window.ResizeObserver) {
-            this.resizeObserver = new ResizeObserver(entries => {
+            this.resizeObserver = new ResizeObserver((entries) => {
                 for (let entry of entries) {
                     // 检测高度变化，如果从0变为非0，表示页面重新显示
                     if (entry.contentRect.height > 0 && !this.isVisible) {
@@ -774,25 +756,25 @@ class LyricsPlayer {
                     }
                 }
             });
-            
+
             // 观察歌词容器
             this.resizeObserver.observe(this.lyricsContainer);
-            
+
             // 观察父容器（player页面）
-            const playerPage = document.querySelector('.player');
+            const playerPage = document.querySelector(".player");
             if (playerPage) {
                 this.resizeObserver.observe(playerPage);
             }
         }
-        
+
         // 当窗口尺寸改变时也刷新布局
-        window.addEventListener('resize', () => {
+        window.addEventListener("resize", () => {
             if (this.isVisible) {
                 this.refreshLayout();
             }
         });
     }
-    
+
     refreshLayout() {
         // 如果没有活跃行但有解析数据，刷新初始视图
         if (this.activeLineIndex === -1 && this.parsedData && this.parsedData.length > 0) {
@@ -801,10 +783,10 @@ class LyricsPlayer {
             // 如果有活跃行，更新行位置
             this.updateLinePositions(this.activeLineIndex, true);
         }
-        
+
         // 标记我们已经显示了初始视图
         this.initialViewDisplayed = true;
-        
+
         // 如果音频正在播放但动画没有运行，则重新启动动画
         if (!this.audio.paused && !this.animationFrame) {
             this.start();
@@ -813,143 +795,143 @@ class LyricsPlayer {
 
     // 添加桌面歌词切换按钮
     addDesktopLyricsToggle() {
-        const toggleBtn = document.createElement('button');
-        toggleBtn.className = 'desktop-lyrics-toggle';
-        toggleBtn.title = '桌面歌词';
+        const toggleBtn = document.createElement("button");
+        toggleBtn.className = "desktop-lyrics-toggle";
+        toggleBtn.title = "桌面歌词";
         toggleBtn.innerHTML = '<i class="bi bi-display"></i>';
-        
+
         if (this.desktopLyricsEnabled) {
-            toggleBtn.classList.add('active');
+            toggleBtn.classList.add("active");
         }
-        
-        toggleBtn.addEventListener('click', () => {
+
+        toggleBtn.addEventListener("click", () => {
             this.toggleDesktopLyrics();
         });
-        
+
         this.lyricsContainer.appendChild(toggleBtn);
         this.desktopLyricsToggle = toggleBtn;
-        
+
         // 添加桌面歌词设置面板
         this.addDesktopLyricsSettings();
     }
-    
+
     // 添加桌面歌词设置面板
     addDesktopLyricsSettings() {
-        const settingsPanel = document.createElement('div');
-        settingsPanel.className = 'desktop-lyrics-settings';
-        
-        const fontSizeItem = document.createElement('div');
-        fontSizeItem.className = 'setting-item';
-        
-        const fontSizeTitle = document.createElement('div');
-        fontSizeTitle.className = 'setting-title';
-        fontSizeTitle.textContent = '字体大小';
-        
-        const fontSizeSliderContainer = document.createElement('div');
-        fontSizeSliderContainer.className = 'slider-container';
-        
-        const fontSizeSlider = document.createElement('input');
-        fontSizeSlider.type = 'range';
-        fontSizeSlider.className = 'slider';
-        fontSizeSlider.min = '16';
-        fontSizeSlider.max = '48';
-        fontSizeSlider.step = '1';
-        fontSizeSlider.value = this.settingManager.getSetting('desktopLyricsFontSize') || '28';
-        
-        const fontSizeValue = document.createElement('div');
-        fontSizeValue.className = 'slider-value';
-        fontSizeValue.textContent = fontSizeSlider.value + 'px';
-        
-        fontSizeSlider.addEventListener('input', () => {
-            fontSizeValue.textContent = fontSizeSlider.value + 'px';
-            this.settingManager.setSetting('desktopLyricsFontSize', fontSizeSlider.value);
+        const settingsPanel = document.createElement("div");
+        settingsPanel.className = "desktop-lyrics-settings";
+
+        const fontSizeItem = document.createElement("div");
+        fontSizeItem.className = "setting-item";
+
+        const fontSizeTitle = document.createElement("div");
+        fontSizeTitle.className = "setting-title";
+        fontSizeTitle.textContent = "字体大小";
+
+        const fontSizeSliderContainer = document.createElement("div");
+        fontSizeSliderContainer.className = "slider-container";
+
+        const fontSizeSlider = document.createElement("input");
+        fontSizeSlider.type = "range";
+        fontSizeSlider.className = "slider";
+        fontSizeSlider.min = "16";
+        fontSizeSlider.max = "48";
+        fontSizeSlider.step = "1";
+        fontSizeSlider.value = this.settingManager.getSetting("desktopLyricsFontSize") || "28";
+
+        const fontSizeValue = document.createElement("div");
+        fontSizeValue.className = "slider-value";
+        fontSizeValue.textContent = fontSizeSlider.value + "px";
+
+        fontSizeSlider.addEventListener("input", () => {
+            fontSizeValue.textContent = fontSizeSlider.value + "px";
+            this.settingManager.setSetting("desktopLyricsFontSize", fontSizeSlider.value);
             this.updateDesktopLyricsStyle();
         });
-        
+
         fontSizeSliderContainer.appendChild(fontSizeSlider);
         fontSizeSliderContainer.appendChild(fontSizeValue);
-        
+
         fontSizeItem.appendChild(fontSizeTitle);
         fontSizeItem.appendChild(fontSizeSliderContainer);
-        
+
         // 透明度设置
-        const opacityItem = document.createElement('div');
-        opacityItem.className = 'setting-item';
-        
-        const opacityTitle = document.createElement('div');
-        opacityTitle.className = 'setting-title';
-        opacityTitle.textContent = '背景透明度';
-        
-        const opacitySliderContainer = document.createElement('div');
-        opacitySliderContainer.className = 'slider-container';
-        
-        const opacitySlider = document.createElement('input');
-        opacitySlider.type = 'range';
-        opacitySlider.className = 'slider';
-        opacitySlider.min = '0';
-        opacitySlider.max = '100';
-        opacitySlider.step = '5';
-        opacitySlider.value = this.settingManager.getSetting('desktopLyricsOpacity') || '50';
-        
-        const opacityValue = document.createElement('div');
-        opacityValue.className = 'slider-value';
-        opacityValue.textContent = opacitySlider.value + '%';
-        
-        opacitySlider.addEventListener('input', () => {
-            opacityValue.textContent = opacitySlider.value + '%';
-            this.settingManager.setSetting('desktopLyricsOpacity', opacitySlider.value);
+        const opacityItem = document.createElement("div");
+        opacityItem.className = "setting-item";
+
+        const opacityTitle = document.createElement("div");
+        opacityTitle.className = "setting-title";
+        opacityTitle.textContent = "背景透明度";
+
+        const opacitySliderContainer = document.createElement("div");
+        opacitySliderContainer.className = "slider-container";
+
+        const opacitySlider = document.createElement("input");
+        opacitySlider.type = "range";
+        opacitySlider.className = "slider";
+        opacitySlider.min = "0";
+        opacitySlider.max = "100";
+        opacitySlider.step = "5";
+        opacitySlider.value = this.settingManager.getSetting("desktopLyricsOpacity") || "50";
+
+        const opacityValue = document.createElement("div");
+        opacityValue.className = "slider-value";
+        opacityValue.textContent = opacitySlider.value + "%";
+
+        opacitySlider.addEventListener("input", () => {
+            opacityValue.textContent = opacitySlider.value + "%";
+            this.settingManager.setSetting("desktopLyricsOpacity", opacitySlider.value);
             this.updateDesktopLyricsStyle();
         });
-        
+
         opacitySliderContainer.appendChild(opacitySlider);
         opacitySliderContainer.appendChild(opacityValue);
-        
+
         opacityItem.appendChild(opacityTitle);
         opacityItem.appendChild(opacitySliderContainer);
-        
+
         settingsPanel.appendChild(fontSizeItem);
         settingsPanel.appendChild(opacityItem);
-        
+
         this.lyricsContainer.appendChild(settingsPanel);
         this.desktopLyricsSettings = settingsPanel;
-        
+
         // 显示/隐藏设置面板
-        this.desktopLyricsToggle.addEventListener('contextmenu', (e) => {
+        this.desktopLyricsToggle.addEventListener("contextmenu", (e) => {
             e.preventDefault();
-            settingsPanel.classList.toggle('visible');
+            settingsPanel.classList.toggle("visible");
         });
-        
+
         // 点击其他地方关闭设置面板
-        document.addEventListener('click', (e) => {
+        document.addEventListener("click", (e) => {
             if (!settingsPanel.contains(e.target) && e.target !== this.desktopLyricsToggle) {
-                settingsPanel.classList.remove('visible');
+                settingsPanel.classList.remove("visible");
             }
         });
 
         // 监听来自桌面歌词窗口的样式更新
         if (this.ipcRenderer) {
-            this.ipcRenderer.on('desktop-lyrics-style-changed', (_, style) => {
+            this.ipcRenderer.on("desktop-lyrics-style-changed", (_, style) => {
                 // 更新设置到SettingManager
                 if (style.currentLineSize) {
-                    this.settingManager.setSetting('desktopLyricsFontSize', style.currentLineSize.toString());
+                    this.settingManager.setSetting("desktopLyricsFontSize", style.currentLineSize.toString());
                     if (fontSizeSlider) fontSizeSlider.value = style.currentLineSize;
                     if (fontSizeValue) fontSizeValue.textContent = `${style.currentLineSize}px`;
                 }
-                
+
                 if (style.backgroundColor) {
                     const opacity = parseInt(style.backgroundColor.match(/[^,]+(?=\))/)[0] * 100);
-                    this.settingManager.setSetting('desktopLyricsOpacity', opacity.toString());
+                    this.settingManager.setSetting("desktopLyricsOpacity", opacity.toString());
                     if (opacitySlider) opacitySlider.value = opacity;
                     if (opacityValue) opacityValue.textContent = `${opacity}%`;
                 }
-                
+
                 // 更新桌面歌词样式
                 this.updateDesktopLyricsStyle();
             });
-            
+
             // 监听背景颜色选择器显示请求
-            this.ipcRenderer.on('show-lyrics-bg-color-picker', () => {
-                this.desktopLyricsSettings.classList.add('visible');
+            this.ipcRenderer.on("show-lyrics-bg-color-picker", () => {
+                this.desktopLyricsSettings.classList.add("visible");
                 // 聚焦不透明度滑块
                 const opacitySlider = this.desktopLyricsSettings.querySelector('input[type="range"]');
                 if (opacitySlider) {
@@ -958,62 +940,60 @@ class LyricsPlayer {
             });
         }
     }
-    
+
     // 更新桌面歌词按钮状态
     updateDesktopLyricsButton() {
         if (this.desktopLyricsToggle) {
             if (this.desktopLyricsEnabled) {
-                this.desktopLyricsToggle.classList.add('active');
-                this.desktopLyricsToggle.title = '关闭桌面歌词';
+                this.desktopLyricsToggle.classList.add("active");
+                this.desktopLyricsToggle.title = "关闭桌面歌词";
             } else {
-                this.desktopLyricsToggle.classList.remove('active');
-                this.desktopLyricsToggle.title = '打开桌面歌词';
+                this.desktopLyricsToggle.classList.remove("active");
+                this.desktopLyricsToggle.title = "打开桌面歌词";
             }
         }
     }
-    
+
     // 切换桌面歌词
     toggleDesktopLyrics() {
         if (!this.ipcRenderer) return;
-        
+
         this.desktopLyricsEnabled = !this.desktopLyricsEnabled;
-        this.settingManager.setSetting('desktopLyricsEnabled', this.desktopLyricsEnabled.toString());
+        this.settingManager.setSetting("desktopLyricsEnabled", this.desktopLyricsEnabled.toString());
         this.updateDesktopLyricsButton();
-        
+
         // 通知主进程切换桌面歌词
-        this.ipcRenderer.send('toggle-desktop-lyrics', this.desktopLyricsEnabled);
-        
+        this.ipcRenderer.send("toggle-desktop-lyrics", this.desktopLyricsEnabled);
+
         // 如果启用了桌面歌词，立即同步当前状态
         if (this.desktopLyricsEnabled) {
             this.updateDesktopLyricsStyle();
             this.syncDesktopLyrics();
         }
     }
-    
+
     // 更新桌面歌词样式
     updateDesktopLyricsStyle() {
         if (!this.ipcRenderer || !this.desktopLyricsEnabled) return;
-        
-        const fontSize = this.settingManager.getSetting('desktopLyricsFontSize') || '28';
-        const opacity = this.settingManager.getSetting('desktopLyricsOpacity') || '50';
-        
+
+        const fontSize = this.settingManager.getSetting("desktopLyricsFontSize") || "28";
+        const opacity = this.settingManager.getSetting("desktopLyricsOpacity") || "50";
+
         // 获取当前主题颜色
         const root = document.documentElement;
         const style = getComputedStyle(root);
-        const theme1 = style.getPropertyValue('--theme-1').trim();
-        const theme2 = style.getPropertyValue('--theme-2').trim();
-        
+        const theme1 = style.getPropertyValue("--theme-1").trim();
+        const theme2 = style.getPropertyValue("--theme-2").trim();
+
         // 计算背景色
         const bgOpacity = parseInt(opacity) / 100;
         const backgroundColor = `rgba(0, 0, 0, ${bgOpacity})`;
-        
+
         // 获取字体
-        const fontFamily = this.settingManager.getSetting('fontFamilyCustom') || 
-                           this.settingManager.getSetting('fontFamilyFallback') ||
-                           '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
-        
+        const fontFamily = this.settingManager.getSetting("fontFamilyCustom") || this.settingManager.getSetting("fontFamilyFallback") || '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif';
+
         // 发送样式到桌面歌词窗口
-        this.ipcRenderer.send('update-lyrics-style', {
+        this.ipcRenderer.send("update-lyrics-style", {
             currentLineSize: parseInt(fontSize),
             nextLineSize: Math.max(parseInt(fontSize) - 4, 14),
             theme1: theme1,
@@ -1022,38 +1002,38 @@ class LyricsPlayer {
             fontFamily: fontFamily
         });
     }
-    
+
     // 同步桌面歌词显示
     syncDesktopLyrics() {
         if (!this.ipcRenderer || !this.desktopLyricsEnabled) return;
-        
+
         // 获取当前激活的歌词行
         let currentLine = "等待播放...";
         let nextLine = "";
-        
+
         // 找到当前激活的行
         if (this.activeLineIndex !== -1 && this.activeLineIndex < this.parsedData.length) {
-            const lyricsData = this.parsedData.filter(data => data.type === "lyric");
-            
+            const lyricsData = this.parsedData.filter((data) => data.type === "lyric");
+
             if (this.activeLineIndex < lyricsData.length) {
                 const activeLineData = lyricsData[this.activeLineIndex];
                 if (activeLineData) {
-                    const lineText = activeLineData.chars.map(char => char.text).join('');
+                    const lineText = activeLineData.chars.map((char) => char.text).join("");
                     currentLine = lineText || "等待播放...";
-                    
+
                     // 找下一行
                     if (this.activeLineIndex + 1 < lyricsData.length) {
                         const nextData = lyricsData[this.activeLineIndex + 1];
                         if (nextData) {
-                            nextLine = nextData.chars.map(char => char.text).join('');
+                            nextLine = nextData.chars.map((char) => char.text).join("");
                         }
                     }
                 }
             }
         }
-        
+
         // 发送歌词数据到桌面歌词窗口 - 无论窗口状态
-        this.ipcRenderer.send('update-desktop-lyrics', {
+        this.ipcRenderer.send("update-desktop-lyrics", {
             currentLine: currentLine,
             nextLine: nextLine,
             songInfo: this.currentSongInfo,
@@ -1076,7 +1056,7 @@ class LyricsPlayer {
     startBackgroundSync() {
         // 如果已经有同步定时器，先停止它
         this.stopBackgroundSync();
-        
+
         // 创建新的定时器，每秒同步一次歌词
         this.backgroundSyncInterval = setInterval(() => {
             if (this.desktopLyricsEnabled) {
@@ -1097,7 +1077,7 @@ class LyricsPlayer {
     destroy() {
         this.stop();
         this.stopBackgroundSync();
-        
+
         // 清理其他资源...
         if (this.resizeObserver) {
             this.resizeObserver.disconnect();
@@ -1108,17 +1088,17 @@ class LyricsPlayer {
      * 设置歌词点击事件
      */
     setupLyricsClickEvent() {
-        const lyricsContainer = document.getElementById('lyrics-container');
+        const lyricsContainer = document.getElementById("lyrics-container");
         if (!lyricsContainer) return;
 
         // 使用事件委托来处理所有歌词行的点击
-        lyricsContainer.addEventListener('click', (event) => {
+        lyricsContainer.addEventListener("click", (event) => {
             // 检查是否启用了歌词跳转
-            const target = event.target.closest('.lyric-line');
+            const target = event.target.closest(".lyric-line");
             if (!target) return;
 
             // 获取时间戳
-            const timestamp = target.getAttribute('data-time');
+            const timestamp = target.getAttribute("data-time");
             if (!timestamp) return;
 
             // 将时间戳转换为秒
@@ -1129,10 +1109,10 @@ class LyricsPlayer {
             if (this.audio && !isNaN(seconds) && isFinite(seconds) && seconds >= 0) {
                 // 设置音频时间并播放
                 this.audio.currentTime = seconds;
-                
+
                 // 如果音频是暂停状态，则开始播放
                 if (this.audio.paused) {
-                    this.audio.play().catch(err => console.warn("播放失败:", err));
+                    this.audio.play().catch((err) => console.warn("播放失败:", err));
                 }
             }
         });
@@ -1145,16 +1125,16 @@ class LyricsPlayer {
      */
     parseTimeToSeconds(timeStr) {
         // 移除方括号
-        const time = timeStr.replace(/[\[\]]/g, '');
-        
+        const time = timeStr.replace(/[[\]]/g, "");
+
         // 解析分钟、秒钟和毫秒
         const match = time.match(/(\d+):(\d+)\.(\d+)/);
         if (!match) return null;
-        
+
         const minutes = parseInt(match[1], 10);
         const seconds = parseInt(match[2], 10);
         const milliseconds = parseInt(match[3], 10) / 100; // 转换为秒的小数部分
-        
+
         return minutes * 60 + seconds + milliseconds;
     }
 }

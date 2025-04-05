@@ -1,4 +1,7 @@
 class CacheManager {
+    /**
+     * 缓存控制组件
+     */
     constructor() {
         this.cachePrefix = "nbmusic_cache_";
     }
