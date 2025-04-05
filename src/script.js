@@ -56,7 +56,6 @@ class App {
             this.favoriteManager = new FavoriteManager(this.playlistManager, this.uiManager);
             this.musicSearcher = new MusicSearcher();
             this.cacheManager = new CacheManager();
-            this.musiclistManager = new MusiclistManager(this.playlistManager, this.musicSearcher, this.cacheManager);
             this.loginManager = new LoginManager(this.uiManager);
             this.musiclistManager = new MusiclistManager(this.playlistManager, this.musicSearcher, this.cacheManager, this.loginManager);
             this.updateManager = new UpdateManager();
