@@ -224,7 +224,7 @@ class AudioPlayer {
             document.querySelector(".control>.buttons>.play").classList = "play paused";
             this.isPlayRequestPending = false;
             if (this.uimanager) {
-                this.uimanager.showNotification("正在重试...", "error");
+                this.uimanager.showNotification("播放失败，正在重试...", "error");
             }
             // 添加短暂延迟再重试，避免立即重试可能导致的同样错误
             setTimeout(() => {
