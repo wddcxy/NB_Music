@@ -97,24 +97,30 @@ function parseCommandLineArgs() {
     };
 }
 
+/* 初始化自动更新 */
 function setupAutoUpdater(win) {
     if (!app.isPackaged) return;
 
+    /*
     autoUpdater.setFeedURL({
         provider: "github",
         owner: "NB-Group",
         repo: "NB_Music"
-    });
+    }); // 已被弃用
+    */
 
+    // 更新出错
     autoUpdater.on("error", (err) => {
         win.webContents.send("update-error", err.message);
     });
 
-    autoUpdater.on("update-available", (info) => {       //更新机制(有更新)
+    // 有更新
+    autoUpdater.on("update-available", (info) => {
         win.webContents.send("update-available", info);
     });
 
-    autoUpdater.on("update-not-available", () => {      //更新机制(无法更新/已是最新版本)
+    // 无法更新/已是最新版本
+    autoUpdater.on("update-not-available", () => {
         win.webContents.send("update-not-available");
     });
 
@@ -122,7 +128,8 @@ function setupAutoUpdater(win) {
         win.webContents.send("download-progress", progress);
     });
 
-    autoUpdater.on("update-downloaded", () => {      //更新机制(已下载完成)
+    // 更新下载完成
+    autoUpdater.on("update-downloaded", () => {
         win.webContents.send("update-downloaded");
 
         const dialogOpts = {
@@ -145,8 +152,7 @@ function setupAutoUpdater(win) {
 
     autoUpdater.checkForUpdates();
 }
-/*古希腊掌管bilibili cookies的神
--------------------------*/
+/* 古希腊掌管 Bilibili Cookie 的神 */
 function loadCookies() {
     if (!storage.has("cookies")) return null;
     return storage.get("cookies");
@@ -181,17 +187,12 @@ async function getBilibiliCookies(skipLocalCookies = false) {
         return "";
     }
 }
-/*---------------------------------*/
 
-/* 加载图标 */
+/* 根据不同的系统返回不同的图标格式 */
 function getIconPath() {
     switch (process.platform) {
         case "win32":
             return path.join(__dirname, "../icons/icon.ico");
-        case "darwin":
-            return path.join(__dirname, "../icons/icon.png");
-        case "linux":
-            return path.join(__dirname, "../icons/icon.png");
         default:
             return path.join(__dirname, "../icons/icon.png");
     }
@@ -220,7 +221,7 @@ function createTrayMenu(win) {
             songInfo = songInfo.slice(0, 23) + "...";
         }
 
-        /* 按钮 */
+        /* 托盘选项 */
         const menuTemplate = [
             {
                 label: "🎵 NB Music",
