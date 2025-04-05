@@ -22,7 +22,7 @@ class SettingManager {
         lyricLineFontSize: 24,
 
         lyricsEnabled: true,
-        lyricSource: "netease", // 歌词来源 默认使用网易云
+        lyricSource: "netease", // 歌词来源 可选值: netease(网易云), bilibili(B站字幕), smart(智能获取)
         autoPlayOnStartup: false, // 自动播放
         loopLyricsEnabled: true, // 循环歌单歌词同步功能 默认开启
         desktopLyricsEnabled: false,

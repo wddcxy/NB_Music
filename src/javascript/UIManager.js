@@ -423,7 +423,12 @@ class UIManager {
                         progressBar.classList.remove("loading");
 
                         // 显示通知
-                        this.showNotification(`歌词来源已切换为${newValue === "netease" ? "网易云歌词" : "B站字幕"}`, "success");
+                        let sourceText = "未知来源";
+                        if (newValue === "netease") sourceText = "网易云歌词";
+                        else if (newValue === "bilibili") sourceText = "B站字幕";
+                        else if (newValue === "smart") sourceText = "智能获取";
+                        
+                        this.showNotification(`歌词来源已切换为${sourceText}`, "success");
                     } catch (error) {
                         console.error("切换歌词来源失败:", error);
                         this.showNotification("切换歌词来源失败，请重试", "error");
