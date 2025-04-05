@@ -57,17 +57,17 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  margin-bottom: 16px;
+  /* margin-bottom: 16px; */
   padding-bottom: 12px;
   border-bottom: 1px solid var(--border-1);
 }
 
 .dialog-header h2 {
   margin: 0;
-  background: linear-gradient(90deg, var(--theme-1), var(--theme-2));
-  -webkit-background-clip: text;
-  background-clip: text;
-  color: transparent;
+  /* background: linear-gradient(90deg, var(--theme-1), var(--theme-2)); */
+  /* -webkit-background-clip: text; */
+  /* background-clip: text; */
+  /* color: transparent; */
   font-size: 1.5rem;
 }
 

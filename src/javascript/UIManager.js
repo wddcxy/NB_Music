@@ -2,6 +2,14 @@ const { ipcRenderer } = require("electron");
 const { extractMusicTitle } = require("../utils.js");
 
 class UIManager {
+    /**
+     * 用户界面管理组件
+     * @param {import("./SettingManager.js")} settingManager
+     * @param {import("./AudioPlayer.js")} audioPlayer
+     * @param {import("./PlaylistManager.js")} playlistManager
+     * @param {import("./FavoriteManager.js")} favoriteManager
+     * @param {import("./MusicSearcher.js")} musicSearcher
+     */
     constructor(settingManager, audioPlayer, playlistManager, favoriteManager, musicSearcher) {
         this.audioPlayer = audioPlayer;
         this.playlistManager = playlistManager;
@@ -11,13 +19,13 @@ class UIManager {
         this.isMaximized = false;
         this.settingManager = settingManager;
         this.minimizeBtn = document.getElementById("maximize");
-    
+
         // 确保设置管理器先初始化
         if (this.audioPlayer) {
             this.audioPlayer.setSettingManager(settingManager);
             // 添加延迟确保设置生效
             setTimeout(() => {
-                const volume = settingManager.getSetting('volume') / 100;
+                const volume = settingManager.getSetting("volume") / 100;
                 this.audioPlayer.audio.volume = volume;
             }, 100);
         }
@@ -216,7 +224,7 @@ class UIManager {
             });
         }
 
-        const downloadBtn = document.querySelector(".import-btn");
+        const downloadBtn = document.querySelector(".download");
         downloadBtn?.addEventListener("click", async () => {
             try {
                 const currentSong = this.playlistManager.playlist[this.playlistManager.playingNow];
@@ -272,12 +280,12 @@ class UIManager {
             if (this.audioPlayer && this.audioPlayer.lyricsPlayer) {
                 this.audioPlayer.lyricsPlayer.setVisibility(newValue === "true");
             }
-            
+
             const lyricsContainer = document.getElementById("lyrics-container");
             if (lyricsContainer) {
                 if (newValue === "true") {
                     lyricsContainer.style.display = "block";
-                    
+
                     // 延迟一点时间，确保DOM更新后再刷新布局
                     setTimeout(() => {
                         if (this.audioPlayer && this.audioPlayer.lyricsPlayer) {
@@ -289,7 +297,7 @@ class UIManager {
                 }
             }
         });
-        
+
         // 监听循环歌词同步设置变更
         this.settingManager.addListener("loopLyricsEnabled", () => {
             // 如果有活跃的歌词播放器，尝试重新检测循环
@@ -297,14 +305,14 @@ class UIManager {
                 // 清除现有检测状态
                 this.audioPlayer.lyricsPlayer.isLoopDetected = false;
                 this.audioPlayer.lyricsPlayer.originalSongDuration = null;
-                
+
                 // 重新检测
                 setTimeout(() => {
                     this.audioPlayer.lyricsPlayer.detectLoopSong();
                 }, 500);
             }
         });
-        
+
         // 应用默认设置
         const lyricsEnabled = this.settingManager.getSetting("lyricsEnabled");
         if (lyricsEnabled === "true" || lyricsEnabled === true) {
@@ -379,13 +387,13 @@ class UIManager {
                 }
             }
         });
-        
+
         this.settingManager.addListener("desktopLyricsFontSize", () => {
             if (this.lyricsPlayer && this.lyricsPlayer.desktopLyricsEnabled) {
                 this.lyricsPlayer.updateDesktopLyricsStyle();
             }
         });
-        
+
         this.settingManager.addListener("desktopLyricsOpacity", () => {
             if (this.lyricsPlayer && this.lyricsPlayer.desktopLyricsEnabled) {
                 this.lyricsPlayer.updateDesktopLyricsStyle();
@@ -401,33 +409,28 @@ class UIManager {
                     try {
                         // 显示加载状态
                         const progressBar = document.querySelector(".progress-bar-inner");
-                        progressBar.classList.add('loading');
-                        
+                        progressBar.classList.add("loading");
+
                         // 根据新的歌词来源重新获取歌词
-                        const newLyrics = await this.musicSearcher.getLyrics(
-                            currentSong.title, 
-                            currentSong.bvid, 
-                            currentSong.cid, 
-                            newValue
-                        );
-                        
+                        const newLyrics = await this.musicSearcher.getLyrics(currentSong.title, currentSong.bvid, currentSong.cid, newValue);
+
                         // 更新歌词显示
                         if (this.audioPlayer.lyricsPlayer) {
                             this.audioPlayer.lyricsPlayer.changeLyrics(newLyrics);
                         }
-                        
+
                         // 隐藏加载状态
-                        progressBar.classList.remove('loading');
-                        
+                        progressBar.classList.remove("loading");
+
                         // 显示通知
-                        this.showNotification(`歌词来源已切换为${newValue === 'netease' ? '网易云歌词' : 'B站字幕'}`, "success");
+                        this.showNotification(`歌词来源已切换为${newValue === "netease" ? "网易云歌词" : "B站字幕"}`, "success");
                     } catch (error) {
                         console.error("切换歌词来源失败:", error);
                         this.showNotification("切换歌词来源失败，请重试", "error");
-                        
+
                         // 隐藏加载状态
                         const progressBar = document.querySelector(".progress-bar-inner");
-                        progressBar.classList.remove('loading');
+                        progressBar.classList.remove("loading");
                     }
                 }
             }
@@ -467,7 +470,6 @@ class UIManager {
             const progress = (this.audioPlayer.audio.currentTime / this.audioPlayer.audio.duration) * 100;
             document.querySelector(".progress-bar-inner").style.width = `${progress}%`;
         });
-        
 
         // 播放控制按钮（使用事件委托）
         const buttonsContainer = document.querySelector(".buttons");
@@ -948,18 +950,22 @@ class UIManager {
         if (!showProgress) {
             setTimeout(() => {
                 notification.classList.add("notification-fadeout");
-                notification.addEventListener('animationend', () => {
-                    notification.remove();
-                    // 如果容器为空则移除容器
-                    if (!container.children.length) {
-                        container.remove();
-                    }
-                }, { once: true });
+                notification.addEventListener(
+                    "animationend",
+                    () => {
+                        notification.remove();
+                        // 如果容器为空则移除容器
+                        if (!container.children.length) {
+                            container.remove();
+                        }
+                    },
+                    { once: true }
+                );
             }, 3000);
         }
 
         // 添加动画类
-        notification.classList.add('animate-notification');
+        notification.classList.add("animate-notification");
 
         return notification;
     }
@@ -1039,7 +1045,7 @@ class UIManager {
             item.dataset.value = option.value;
 
             // 点击选项时更新选中状态
-            item.addEventListener("click", (e) => {
+            item.addEventListener("click", () => {
                 // e.stopPropagation();
 
                 // 视觉上的选中效果
@@ -1265,10 +1271,9 @@ class UIManager {
                 isPlaying,
                 song
             });
-            
+
             // 同步更新到桌面歌词 - 确保托盘更新时也更新桌面歌词
-            if (this.audioPlayer && this.audioPlayer.lyricsPlayer && 
-                this.audioPlayer.lyricsPlayer.desktopLyricsEnabled) {
+            if (this.audioPlayer && this.audioPlayer.lyricsPlayer && this.audioPlayer.lyricsPlayer.desktopLyricsEnabled) {
                 this.audioPlayer.lyricsPlayer.syncDesktopLyrics();
             }
         } catch (error) {
@@ -1287,68 +1292,71 @@ class UIManager {
     // 添加全局动画初始化方法
     initializeAnimations() {
         // 为所有按钮添加点击波纹效果
-        document.querySelectorAll('button:not(.mica), .btn, .import-btn, [data-action]').forEach(button => {
-            button.addEventListener('click', this.addClickRipple);
+        document.querySelectorAll("button:not(.mica), .btn, .import-btn, [data-action]").forEach((button) => {
+            button.addEventListener("click", this.addClickRipple);
         });
-        
+
         // 为所有卡片添加悬停动画
-        document.querySelectorAll('.card').forEach(card => {
-            if (!card.classList.contains('mica')) {
-                card.classList.add('animate-card');
+        document.querySelectorAll(".card").forEach((card) => {
+            if (!card.classList.contains("mica")) {
+                card.classList.add("animate-card");
             }
         });
-        
+
         // 为列表项添加交互动画
-        document.querySelectorAll('.song, #playlistList li, #songList li').forEach((item, index) => {
+        document.querySelectorAll(".song, #playlistList li, #songList li").forEach((item, index) => {
             // 添加错落有致的加载动画
-            if (!item.classList.contains('mica')) {
-                item.style.opacity = '0';
-                item.style.transform = 'translateY(20px)';
-                
-                setTimeout(() => {
-                    item.style.transition = 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)';
-                    item.style.opacity = '1';
-                    item.style.transform = 'translateY(0)';
-                }, 50 + index * 30); // 错开加载时间
+            if (!item.classList.contains("mica")) {
+                item.style.opacity = "0";
+                item.style.transform = "translateY(20px)";
+
+                setTimeout(
+                    () => {
+                        item.style.transition = "all 0.4s cubic-bezier(0.4, 0, 0.2, 1)";
+                        item.style.opacity = "1";
+                        item.style.transform = "translateY(0)";
+                    },
+                    50 + index * 30
+                ); // 错开加载时间
             }
         });
-        
+
         // 为标题栏添加动画
-        const titbar = document.querySelector('.titbar');
+        const titbar = document.querySelector(".titbar");
         if (titbar) {
-            titbar.classList.add('animate-fadeIn');
+            titbar.classList.add("animate-fadeIn");
         }
-        
+
         // 为所有页面设置过渡动画
-        document.querySelectorAll('.content > div').forEach(page => {
-            page.classList.add('page-transition');
+        document.querySelectorAll(".content > div").forEach((page) => {
+            page.classList.add("page-transition");
         });
-        
+
         // 监听音频状态变化添加动画
         if (this.audioPlayer && this.audioPlayer.audio) {
-            this.audioPlayer.audio.addEventListener('play', () => {
-                const playButton = document.querySelector('.play');
+            this.audioPlayer.audio.addEventListener("play", () => {
+                const playButton = document.querySelector(".play");
                 if (playButton) {
-                    playButton.classList.add('animate-play');
-                    setTimeout(() => playButton.classList.remove('animate-play'), 500);
+                    playButton.classList.add("animate-play");
+                    setTimeout(() => playButton.classList.remove("animate-play"), 500);
                 }
-                
-                const cover = document.querySelector('.cover-img');
+
+                const cover = document.querySelector(".cover-img");
                 if (cover) {
-                    cover.classList.add('rotate-animation');
+                    cover.classList.add("rotate-animation");
                 }
             });
-            
-            this.audioPlayer.audio.addEventListener('pause', () => {
-                const playButton = document.querySelector('.play');
+
+            this.audioPlayer.audio.addEventListener("pause", () => {
+                const playButton = document.querySelector(".play");
                 if (playButton) {
-                    playButton.classList.add('animate-pause');
-                    setTimeout(() => playButton.classList.remove('animate-pause'), 500);
+                    playButton.classList.add("animate-pause");
+                    setTimeout(() => playButton.classList.remove("animate-pause"), 500);
                 }
-                
-                const cover = document.querySelector('.cover-img');
+
+                const cover = document.querySelector(".cover-img");
                 if (cover) {
-                    cover.classList.remove('rotate-animation');
+                    cover.classList.remove("rotate-animation");
                 }
             });
         }
@@ -1356,23 +1364,23 @@ class UIManager {
         // 增强播放器交互控件
         this.enhancePlayerControls();
     }
-    
+
     // 添加点击波纹效果函数
     addClickRipple(e) {
         // 避免为带有毛玻璃效果的元素添加动画
-        if (this.classList.contains('mica')) return;
-        
+        if (this.classList.contains("mica")) return;
+
         const rect = this.getBoundingClientRect();
         const x = e.clientX - rect.left;
         const y = e.clientY - rect.top;
-        
-        const ripple = document.createElement('span');
-        ripple.className = 'ripple-effect';
+
+        const ripple = document.createElement("span");
+        ripple.className = "ripple-effect";
         ripple.style.left = `${x}px`;
         ripple.style.top = `${y}px`;
-        
+
         this.appendChild(ripple);
-        
+
         setTimeout(() => {
             ripple.remove();
         }, 600); // 等待动画完成
@@ -1381,246 +1389,247 @@ class UIManager {
     // 为播放器添加增强交互动画
     enhancePlayerControls() {
         // 添加时间预览提示功能
-        const progressBar = document.querySelector('.player .control .progress .progress-bar');
-        
+        const progressBar = document.querySelector(".player .control .progress .progress-bar");
+
         if (progressBar) {
             // 创建时间预览元素
-            const timePreview = document.createElement('div');
-            timePreview.className = 'progress-time-preview';
+            const timePreview = document.createElement("div");
+            timePreview.className = "progress-time-preview";
             progressBar.appendChild(timePreview);
-            
+
             // 监听鼠标移动
-            progressBar.addEventListener('mousemove', (e) => {
+            progressBar.addEventListener("mousemove", (e) => {
                 const rect = progressBar.getBoundingClientRect();
                 const percent = (e.clientX - rect.left) / rect.width;
                 const duration = this.audioPlayer.audio.duration || 0;
+                // eslint-disable-next-line no-unused-vars
                 const time = duration * percent;
-                
+
                 // 更新时间预览位置和内容
                 timePreview.style.left = `${e.clientX - rect.left}px`;
             });
-            
+
             // 监听鼠标按下和移动
             let isDragging = false;
-            
-            progressBar.addEventListener('mousedown', () => {
+
+            progressBar.addEventListener("mousedown", () => {
                 isDragging = true;
-                document.body.classList.add('seeking');
+                document.body.classList.add("seeking");
             });
-            
-            document.addEventListener('mousemove', (e) => {
+
+            document.addEventListener("mousemove", (e) => {
                 if (!isDragging) return;
-                
+
                 const rect = progressBar.getBoundingClientRect();
                 const percent = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
                 const duration = this.audioPlayer.audio.duration || 0;
-                
+
                 // 更新进度条位置
-                const progressBarInner = progressBar.querySelector('.progress-bar-inner');
+                const progressBarInner = progressBar.querySelector(".progress-bar-inner");
                 if (progressBarInner) {
                     progressBarInner.style.width = `${percent * 100}%`;
                 }
-                
+
                 // 更新播放时间显示
-                const currentTimeEl = document.querySelector('.player .control .time .currentTime');
+                const currentTimeEl = document.querySelector(".player .control .time .currentTime");
                 if (currentTimeEl) {
                     currentTimeEl.textContent = this.formatTime(duration * percent);
                 }
             });
-            
-            document.addEventListener('mouseup', () => {
+
+            document.addEventListener("mouseup", () => {
                 if (isDragging) {
                     isDragging = false;
-                    document.body.classList.remove('seeking');
+                    document.body.classList.remove("seeking");
                 }
             });
-            
+
             // 点击进度条快速跳转
-            progressBar.addEventListener('click', (e) => {
+            progressBar.addEventListener("click", (e) => {
                 const rect = progressBar.getBoundingClientRect();
                 const percent = (e.clientX - rect.left) / rect.width;
-                
+
                 if (this.audioPlayer && this.audioPlayer.audio) {
                     // 触发跳转动画
-                    progressBar.classList.add('clicked');
-                    setTimeout(() => progressBar.classList.remove('clicked'), 300);
-                    
+                    progressBar.classList.add("clicked");
+                    setTimeout(() => progressBar.classList.remove("clicked"), 300);
+
                     // 设置音频时间
                     this.audioPlayer.audio.currentTime = percent * this.audioPlayer.audio.duration;
                 }
             });
         }
-        
+
         // 增强音量控制功能
-        const volumeControl = document.querySelector('.player .control .buttons .volume');
-        
+        const volumeControl = document.querySelector(".player .control .buttons .volume");
+
         if (volumeControl) {
             // 创建音量滑块
-            const volumeSlider = document.createElement('div');
-            volumeSlider.className = 'volume-slider';
-            
-            const volumeBar = document.createElement('div');
-            volumeBar.className = 'volume-bar';
-            
-            const volumeLevel = document.createElement('div');
-            volumeLevel.className = 'volume-level';
-            
-            const volumeHandle = document.createElement('div');
-            volumeHandle.className = 'volume-handle';
-            
+            const volumeSlider = document.createElement("div");
+            volumeSlider.className = "volume-slider";
+
+            const volumeBar = document.createElement("div");
+            volumeBar.className = "volume-bar";
+
+            const volumeLevel = document.createElement("div");
+            volumeLevel.className = "volume-level";
+
+            const volumeHandle = document.createElement("div");
+            volumeHandle.className = "volume-handle";
+
             volumeBar.appendChild(volumeLevel);
             volumeLevel.appendChild(volumeHandle);
             volumeSlider.appendChild(volumeBar);
             volumeControl.appendChild(volumeSlider);
-            
+
             // 更新初始音量显示
             if (this.audioPlayer && this.audioPlayer.audio) {
                 const currentVolume = this.audioPlayer.audio.volume * 100;
                 volumeLevel.style.height = `${currentVolume}%`;
                 volumeHandle.style.bottom = `${currentVolume}%`;
-                
+
                 // 根据音量状态更新图标和静音标记
-                const volumeIcon = volumeControl.querySelector('i');
+                const volumeIcon = volumeControl.querySelector("i");
                 if (volumeIcon) {
                     if (this.audioPlayer.audio.volume === 0) {
-                        volumeControl.classList.add('muted');
-                        volumeIcon.className = 'bi bi-volume-mute-fill';
+                        volumeControl.classList.add("muted");
+                        volumeIcon.className = "bi bi-volume-mute-fill";
                     } else {
-                        volumeControl.classList.remove('muted');
+                        volumeControl.classList.remove("muted");
                         if (this.audioPlayer.audio.volume < 0.3) {
-                            volumeIcon.className = 'bi bi-volume-off-fill';
+                            volumeIcon.className = "bi bi-volume-off-fill";
                         } else if (this.audioPlayer.audio.volume < 0.7) {
-                            volumeIcon.className = 'bi bi-volume-down-fill';
+                            volumeIcon.className = "bi bi-volume-down-fill";
                         } else {
-                            volumeIcon.className = 'bi bi-volume-up-fill';
+                            volumeIcon.className = "bi bi-volume-up-fill";
                         }
                     }
                 }
             }
-            
+
             // 监听音量滑块点击和拖动
             let isDraggingVolume = false;
-            
-            volumeBar.addEventListener('mousedown', (e) => {
+
+            volumeBar.addEventListener("mousedown", (e) => {
                 isDraggingVolume = true;
                 updateVolumeFromEvent(e);
             });
-            
-            document.addEventListener('mousemove', (e) => {
+
+            document.addEventListener("mousemove", (e) => {
                 if (!isDraggingVolume) return;
                 updateVolumeFromEvent(e);
             });
-            
-            document.addEventListener('mouseup', () => {
+
+            document.addEventListener("mouseup", () => {
                 isDraggingVolume = false;
             });
-            
+
             // 点击音量图标切换静音
-            volumeControl.querySelector('i').addEventListener('click', (e) => {
+            volumeControl.querySelector("i").addEventListener("click", (e) => {
                 e.stopPropagation();
-                
+
                 if (this.audioPlayer && this.audioPlayer.audio) {
                     const wasMuted = this.audioPlayer.audio.volume === 0;
-                    
+
                     // 保存当前音量
-                    const lastVolume = parseFloat(volumeControl.getAttribute('data-last-volume') || '100');
-                    
+                    const lastVolume = parseFloat(volumeControl.getAttribute("data-last-volume") || "100");
+
                     if (wasMuted) {
                         // 恢复上次的音量
                         this.audioPlayer.audio.volume = lastVolume / 100;
-                        this.settingManager.setSetting('volume', lastVolume);
+                        this.settingManager.setSetting("volume", lastVolume);
                     } else {
                         // 保存当前音量并静音
-                        volumeControl.setAttribute('data-last-volume', Math.round(this.audioPlayer.audio.volume * 100).toString());
+                        volumeControl.setAttribute("data-last-volume", Math.round(this.audioPlayer.audio.volume * 100).toString());
                         this.audioPlayer.audio.volume = 0;
-                        this.settingManager.setSetting('volume', '0');
+                        this.settingManager.setSetting("volume", "0");
                     }
-                    
+
                     // 更新UI
                     updateVolumeUI();
                 }
             });
-            
+
             // 从事件更新音量
             const updateVolumeFromEvent = (e) => {
                 const rect = volumeBar.getBoundingClientRect();
                 let percent = 1 - (e.clientY - rect.top) / rect.height;
                 percent = Math.max(0, Math.min(1, percent));
-                
+
                 if (this.audioPlayer && this.audioPlayer.audio) {
                     // 设置音频音量
                     this.audioPlayer.audio.volume = percent;
-                    
+
                     // 更新设置
-                    this.settingManager.setSetting('volume', Math.round(percent * 100).toString());
-                    
+                    this.settingManager.setSetting("volume", Math.round(percent * 100).toString());
+
                     // 更新UI
                     updateVolumeUI();
                 }
             };
-            
+
             // 更新音量UI
             const updateVolumeUI = () => {
                 if (!this.audioPlayer || !this.audioPlayer.audio) return;
-                
+
                 const volume = this.audioPlayer.audio.volume;
                 const percent = volume * 100;
-                
+
                 // 更新滑块位置
                 volumeLevel.style.height = `${percent}%`;
                 volumeHandle.style.bottom = `${percent}%`;
-                
+
                 // 更新图标
-                const volumeIcon = volumeControl.querySelector('i');
+                const volumeIcon = volumeControl.querySelector("i");
                 if (volumeIcon) {
                     if (volume === 0) {
-                        volumeControl.classList.add('muted');
-                        volumeIcon.className = 'bi bi-volume-mute-fill';
+                        volumeControl.classList.add("muted");
+                        volumeIcon.className = "bi bi-volume-mute-fill";
                     } else {
-                        volumeControl.classList.remove('muted');
+                        volumeControl.classList.remove("muted");
                         if (volume < 0.3) {
-                            volumeIcon.className = 'bi bi-volume-off-fill';
+                            volumeIcon.className = "bi bi-volume-off-fill";
                         } else if (volume < 0.7) {
-                            volumeIcon.className = 'bi bi-volume-down-fill';
+                            volumeIcon.className = "bi bi-volume-down-fill";
                         } else {
-                            volumeIcon.className = 'bi bi-volume-up-fill';
+                            volumeIcon.className = "bi bi-volume-up-fill";
                         }
                     }
                 }
             };
         }
-        
+
         // 增强专辑封面动画
-        const coverImg = document.querySelector('.player-content .cover .cover-img');
-        
+        const coverImg = document.querySelector(".player-content .cover .cover-img");
+
         if (coverImg && this.audioPlayer) {
             // 当播放状态改变时，更新专辑旋转状态
-            this.audioPlayer.audio.addEventListener('play', () => {
-                coverImg.classList.add('playing');
-                coverImg.classList.remove('paused');
+            this.audioPlayer.audio.addEventListener("play", () => {
+                coverImg.classList.add("playing");
+                coverImg.classList.remove("paused");
             });
-            
-            this.audioPlayer.audio.addEventListener('pause', () => {
-                coverImg.classList.add('paused');
+
+            this.audioPlayer.audio.addEventListener("pause", () => {
+                coverImg.classList.add("paused");
             });
         }
-        
+
         // 歌曲切换时的动画效果
         if (this.playlistManager) {
             const originalSetPlayingNow = this.playlistManager.setPlayingNow;
-            
-            this.playlistManager.setPlayingNow = async function(index, replay = true, autoPlay = true) {
+
+            this.playlistManager.setPlayingNow = async function (index, replay = true, autoPlay = true) {
                 // 添加歌曲切换类
-                document.body.classList.add('song-changing');
-                
+                document.body.classList.add("song-changing");
+
                 // 调用原始方法
                 const result = await originalSetPlayingNow.call(this, index, replay, autoPlay);
-                
+
                 // 延迟移除类名，以确保动画完成
                 setTimeout(() => {
-                    document.body.classList.remove('song-changing');
+                    document.body.classList.remove("song-changing");
                 }, 500);
-                
+
                 return result;
             };
         }

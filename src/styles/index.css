@@ -16,6 +16,7 @@
 @import './components/notifications.css';
 @import './components/dropdown.css';
 @import './components/videoplayer.css';   /* 添加视频播放器样式 */
+@import './components/effectmanager.css';
 @import './components/localimport.css';   /* 本地导入样式 */
 @import './components/playerstates.css';  /* 播放器状态样式 */
 @import './components/login.css';  /* 登录界面样式 */

@@ -63,12 +63,7 @@ function applyWindowState(win) {
 
             for (const display of displays) {
                 const bounds = display.bounds;
-                if (
-                    state.x >= bounds.x &&
-                    state.y >= bounds.y &&
-                    state.x < bounds.x + bounds.width &&
-                    state.y < bounds.y + bounds.height
-                ) {
+                if (state.x >= bounds.x && state.y >= bounds.y && state.x < bounds.x + bounds.width && state.y < bounds.y + bounds.height) {
                     isVisible = true;
                     break;
                 }
@@ -843,16 +838,10 @@ app.commandLine.appendSwitch("disable-background-timer-throttling");
 
 function setBilibiliRequestCookie(cookieString) {
     session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
-        if (
-            details.url.includes("bilibili.com") ||
-            details.url.includes("bilivideo.cn") ||
-            details.url.includes("bilivideo.com") ||
-            details.url.includes("akamaized.net")
-        ) {
+        if (details.url.includes("bilibili.com") || details.url.includes("bilivideo.cn") || details.url.includes("bilivideo.com") || details.url.includes("akamaized.net")) {
             details.requestHeaders["Cookie"] = cookieString;
             details.requestHeaders["referer"] = "https://www.bilibili.com/";
-            details.requestHeaders["user-agent"] =
-                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3";
+            details.requestHeaders["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3";
         }
         callback({ requestHeaders: details.requestHeaders });
     });
