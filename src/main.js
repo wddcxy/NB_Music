@@ -97,23 +97,29 @@ function parseCommandLineArgs() {
     };
 }
 
+/* 初始化自动更新 */
 function setupAutoUpdater(win) {
     if (!app.isPackaged) return;
 
+    /*
     autoUpdater.setFeedURL({
         provider: "github",
         owner: "NB-Group",
         repo: "NB_Music"
-    });
+    }); // 已被弃用
+    */
 
+    // 更新出错
     autoUpdater.on("error", (err) => {
         win.webContents.send("update-error", err.message);
     });
 
+    // 有更新
     autoUpdater.on("update-available", (info) => {
         win.webContents.send("update-available", info);
     });
 
+    // 无法更新/已是最新版本
     autoUpdater.on("update-not-available", () => {
         win.webContents.send("update-not-available");
     });
@@ -122,6 +128,7 @@ function setupAutoUpdater(win) {
         win.webContents.send("download-progress", progress);
     });
 
+    // 更新下载完成
     autoUpdater.on("update-downloaded", () => {
         win.webContents.send("update-downloaded");
 
@@ -129,7 +136,7 @@ function setupAutoUpdater(win) {
             type: "info",
             buttons: ["重启", "稍后"],
             title: "应用更新",
-            message: "有新版本已下载完成,是否重启应用?"
+            message: "有新版本已下载完成,是否重启应用?" 
         };
 
         require("electron")
@@ -145,7 +152,7 @@ function setupAutoUpdater(win) {
 
     autoUpdater.checkForUpdates();
 }
-
+/* 古希腊掌管 Bilibili Cookie 的神 */
 function loadCookies() {
     if (!storage.has("cookies")) return null;
     return storage.get("cookies");
@@ -181,14 +188,11 @@ async function getBilibiliCookies(skipLocalCookies = false) {
     }
 }
 
+/* 根据不同的系统返回不同的图标格式 */
 function getIconPath() {
     switch (process.platform) {
         case "win32":
             return path.join(__dirname, "../icons/icon.ico");
-        case "darwin":
-            return path.join(__dirname, "../icons/icon.png");
-        case "linux":
-            return path.join(__dirname, "../icons/icon.png");
         default:
             return path.join(__dirname, "../icons/icon.png");
     }
@@ -217,6 +221,7 @@ function createTrayMenu(win) {
             songInfo = songInfo.slice(0, 23) + "...";
         }
 
+        /* 托盘选项 */
         const menuTemplate = [
             {
                 label: "🎵 NB Music",
@@ -840,8 +845,8 @@ function setBilibiliRequestCookie(cookieString) {
     session.defaultSession.webRequest.onBeforeSendHeaders((details, callback) => {
         if (details.url.includes("bilibili.com") || details.url.includes("bilivideo.cn") || details.url.includes("bilivideo.com") || details.url.includes("akamaized.net")) {
             details.requestHeaders["Cookie"] = cookieString;
-            details.requestHeaders["referer"] = "https://www.bilibili.com/";
-            details.requestHeaders["user-agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3";
+            details.requestHeaders["Referer"] = "https://www.bilibili.com/";
+            details.requestHeaders["User-Agent"] = "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36";
         }
         callback({ requestHeaders: details.requestHeaders });
     });
