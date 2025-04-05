@@ -15,12 +15,12 @@ class LoginManager {
     constructor(uiManager) {
         this.qrcodeKey = null;
         this.pollTimer = null;
-        this.loginDialog = document.getElementById("loginDialog");
-        this.qrcodeCanvas = document.getElementById("qrcode");
-        this.qrcodeStatus = document.querySelector(".qrcode-status");
-        this.loginBtn = document.querySelector(".login-btn");
-        this.refreshBtn = document.getElementById("refreshQRCode");
-        this.cancelBtn = document.getElementById("cancelLogin");
+        this.loginDialog = document.getElementById('loginDialog');
+        this.qrcodeCanvas = document.getElementById('qrcode');
+        this.qrcodeStatus = document.getElementById('qrcodeStatus');
+        this.loginBtn = document.querySelector('.login-btn');
+        this.refreshBtn = document.getElementById('refreshQRCode');
+        this.cancelBtn = document.getElementById('cancelLogin');
         this.uiManager = uiManager;
 
         this.isLogin = false;
@@ -235,12 +235,10 @@ class LoginManager {
             const data = await response.json();
 
             if (data.code === 0) {
-                const statusElem = document.querySelector(".qrcode-status");
-
                 switch (data.data.code) {
                     case 0: {
                         // 登录成功
-                        statusElem.textContent = "登录成功，正在设置...";
+                        this.qrcodeStatus.textContent = '登录成功，正在设置...';
                         this.clearPolling();
 
                         // 获取所有的cookie
@@ -253,26 +251,27 @@ class LoginManager {
                         // 发送给主进程设置
                         ipcRenderer.send("login-success", { cookies });
 
-                        ipcRenderer.once("cookies-set-error", (_, error) => {
-                            this.uiManager.showNotification("登录失败", "error");
-                            statusElem.textContent = `登录失败: ${error}`;
-                            console.error("登录失败:", error);
+                        ipcRenderer.once('cookies-set-error', (_, error) => {
+                            this.uiManager.showNotification('登录失败', 'error');
+                            this.qrcodeStatus.textContent = `登录失败: ${error}`;
+                            console.error('登录失败:', error);
+
                             setTimeout(() => this.hideLoginDialog(), 2000);
                         });
                         break;
                     }
 
                     case 86038: // 二维码已过期
-                        statusElem.textContent = "二维码已过期，请点击刷新";
+                        this.qrcodeStatus.textContent = '二维码已过期，请点击刷新';
                         this.clearPolling();
                         break;
 
                     case 86101: // 等待扫码
-                        statusElem.textContent = "请使用哔哩哔哩客户端扫码登录";
+                        this.qrcodeStatus.textContent = '请使用哔哩哔哩客户端扫码登录';
                         break;
 
                     case 86090: // 已扫码等待确认
-                        statusElem.textContent = "请在手机上确认登录";
+                        this.qrcodeStatus.textContent = '请在手机上确认登录';
                         break;
                 }
             }
@@ -284,7 +283,7 @@ class LoginManager {
 
     startPolling() {
         this.clearPolling();
-        this.pollTimer = setInterval(() => this.pollLoginStatus(), 3000);
+        this.pollTimer = setInterval(() => this.pollLoginStatus(), 1500);
     }
 
     clearPolling() {
@@ -507,8 +506,8 @@ class LoginManager {
     }
 
     logout() {
-        ipcRenderer.once("logout-success", () => {
-            this.uiManager.showNotification("退出登录成功", "info");
+        ipcRenderer.once('logout-success', () => {
+            this.uiManager.showNotification('退出登录成功', 'success');
             location.reload();
         });
 

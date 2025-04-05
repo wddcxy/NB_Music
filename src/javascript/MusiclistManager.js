@@ -779,14 +779,14 @@ class MusiclistManager {
         `;
         deleteBtn.parentNode.appendChild(confirmText);
 
-        // 3秒后恢复原状
+        // 5秒后恢复原状
         setTimeout(() => {
             deleteBtn.classList.remove("confirm-delete");
             deleteBtn.style.color = "";
             if (confirmText.parentNode) {
                 confirmText.remove();
             }
-        }, 3000);
+        }, 5000);
     }
 
     handlePlaylistUpdate() {
@@ -808,14 +808,9 @@ class MusiclistManager {
 
         try {
             // 解析收藏夹ID
-            let favId = mediaId;
-            if (!/^\d+$/.test(mediaId)) {
-                // 解析链接中的ID
-                const match = mediaId.match(/fid=(\d+)/);
-                if (!match) {
-                    throw new Error("无法解析收藏夹ID，请确认输入格式正确");
-                }
-                favId = match[1];
+            let favId = this.parseFavId(mediaId);
+            if (!favId) {
+                throw new Error("无法解析收藏夹ID，请确认输入格式正确");
             }
 
             // 1. 获取收藏夹信息
@@ -973,28 +968,39 @@ class MusiclistManager {
         });
     }
 
+    // 解析收藏夹ID（也适用于合集链接）
+    parseFavId(input) {
+        if (/^\d+$/.test(input)) {
+            return input; // 直接输入的ID
+        } else {
+            // 解析链接中的ID
+            const match = input.match(/fid=(\d+)/);
+            if (match) return match[1]; else return null;
+        }
+    }
+
+    // 解析合集ID
+    parseSeasonId(input) {
+        if (/^\d+$/.test(input)) {
+            return input; // 直接输入的ID
+        } else {
+            // 解析合集链接格式：https://space.bilibili.com/1060544882/lists/1049571?type=season
+            const match = input.match(/\/lists\/(\d+)/) ||
+                input.match(/sid=(\d+)/) ||
+                input.match(/season_id=(\d+)/);
+            if (match) return match[1]; else return null;
+        }
+    }
+
     async importFromBiliSeason(input) {
         let importNotification = null;
         let lyricsNotification = null;
 
         try {
-            let seasonId;
-
             // 解析合集ID
-            if (/^\d+$/.test(input)) {
-                seasonId = input; // 直接输入的ID
-            } else {
-                // 尝试格式1
-                // 链接格式：https://space.bilibili.com/1060544882/lists/1049571?type=season
-                const match = input.match(/\/lists\/(\d+)/) || input.match(/sid=(\d+)/) || input.match(/season_id=(\d+)/);
-                if (match) seasonId = match[1];
-                else {
-                    // 尝试格式2
-                    // 链接格式：https://space.bilibili.com/1060544882/favlist?fid=1049571&ftype=collect&ctype=21
-                    const match2 = input.match(/fid=(\d+)/);
-                    if (match2) seasonId = match2[1];
-                    else throw new Error("无法解析合集ID，请确认输入格式正确");
-                }
+            let seasonId = this.parseSeasonId(input) ?? this.parseFavId(input);
+            if (!seasonId) {
+                throw new Error('无法解析合集ID，请确认输入格式正确');
             }
 
             // 1. 获取合集信息，需要mid参数，先尝试获取

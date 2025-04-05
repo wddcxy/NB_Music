@@ -8,6 +8,7 @@
   user-select: none;
   color: var(--text);
   -webkit-user-drag: none;
+  font-family: var(--font-family-custom) var(--font-family-fallback), sans-serif;
   transition: all 0.3s ease-in-out;
 }
 
@@ -19,7 +20,6 @@ html {
 }
 
 body {
-  font-family: var(--font-family-custom) var(--font-family-fallback), sans-serif;
   background: var(--bgul);
   color: var(--text);
   width: 100%;
