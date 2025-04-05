@@ -43,7 +43,7 @@ class AudioPlayer {
             console.error('音频播放错误:', e);
             this.isPlayRequestPending = false;
             if (this.uimanager) {
-                this.uimanager.showNotification('正在重试...', 'warning');
+                this.uimanager.showNotification('播放出错，正在尝试恢复...', 'warning');
                 // 尝试重新加载当前歌曲
                 setTimeout(() => {
                     if (this.playlistManager && this.playlistManager.playlist.length > 0) {
