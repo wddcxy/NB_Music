@@ -543,7 +543,81 @@ class MusicSearcher {
                 return this.lyricsCache.netease[songName];
             }
 
-            // 根据设置选择歌词来源
+            // 智能获取歌词模式
+            if (lyricSource === "smart" && songName && bvid && cid) {
+                try {
+                    // 显示加载状态
+                    this.showLoadingState(true);
+                    
+                    // 尝试从网易云获取歌词
+                    let neteaseLyrics = "暂无歌词，尽情欣赏音乐";
+                    let bilibiliLyrics = "暂无歌词，尽情欣赏音乐";
+                    let neteaseSuccess = false;
+                    
+                    try {
+                        const searchResponse = await search({
+                            keywords: songName,
+                            limit: 1
+                        });
+                        
+                        const searchResult = searchResponse.body;
+                        if (searchResult.result && searchResult.result.songs && searchResult.result.songs.length > 0) {
+                            const songId = searchResult.result.songs[0].id;
+                            const yrcResponse = await lyric_new({ id: songId });
+                            
+                            if (yrcResponse.body) {
+                                const yrcLyrics = yrcResponse.body;
+                                neteaseLyrics = yrcLyrics.yrc ? yrcLyrics.yrc.lyric : 
+                                               yrcLyrics.lrc ? yrcLyrics.lrc.lyric : 
+                                               "暂无歌词，尽情欣赏音乐";
+                                               
+                                if (neteaseLyrics && neteaseLyrics !== "暂无歌词，尽情欣赏音乐") {
+                                    neteaseSuccess = true;
+                                    // 缓存网易云歌词
+                                    this.lyricsCache.netease[songName] = neteaseLyrics;
+                                }
+                            }
+                        }
+                    } catch (error) {
+                        console.error("智能获取模式: 获取网易云歌词失败", error);
+                    }
+                    
+                    // 尝试从B站获取字幕
+                    let bilibiliSuccess = false;
+                    try {
+                        bilibiliLyrics = await this.getBilibiliSubtitle(bvid, cid);
+                        
+                        if (bilibiliLyrics && bilibiliLyrics !== "暂无歌词，尽情欣赏音乐") {
+                            bilibiliSuccess = true;
+                            // 缓存B站字幕
+                            this.lyricsCache.bilibili[`${bvid}-${cid}`] = bilibiliLyrics;
+                        }
+                    } catch (error) {
+                        console.error("智能获取模式: 获取B站字幕失败", error);
+                    }
+                    
+                    // 隐藏加载状态
+                    this.showLoadingState(false);
+                    
+                    // 决定使用哪个来源的歌词
+                    if (neteaseSuccess) {
+                        console.log("智能获取模式: 使用网易云歌词");
+                        return neteaseLyrics;
+                    } else if (bilibiliSuccess) {
+                        console.log("智能获取模式: 使用B站字幕");
+                        return bilibiliLyrics;
+                    } else {
+                        console.log("智能获取模式: 无可用歌词");
+                        return "暂无歌词，尽情欣赏音乐";
+                    }
+                } catch (error) {
+                    console.error("智能获取歌词失败", error);
+                    this.showLoadingState(false);
+                    return "暂无歌词，尽情欣赏音乐";
+                }
+            }
+            
+            // 原有的获取逻辑
             if (lyricSource === "bilibili" && bvid && cid) {
                 try {
                     // 显示加载状态
@@ -637,6 +711,12 @@ class MusicSearcher {
     // 新增：获取B站字幕
     async getBilibiliSubtitle(bvid, cid) {
         try {
+            // 参数验证
+            if (!bvid || !cid) {
+                console.warn("获取B站字幕失败：缺少必要参数bvid或cid");
+                return "暂无歌词，尽情欣赏音乐";
+            }
+            
             // 构建API请求
             const url = `https://api.bilibili.com/x/player/wbi/v2?bvid=${bvid}&cid=${cid}`;
 
@@ -653,6 +733,7 @@ class MusicSearcher {
 
             // 如果没有字幕
             if (!subtitle || !subtitle.list || subtitle.list.length === 0) {
+                console.log(`视频 ${bvid} 没有可用字幕`);
                 return "暂无歌词，尽情欣赏音乐";
             }
 
@@ -661,15 +742,27 @@ class MusicSearcher {
 
             // 获取字幕文件的URL
             const subtitleUrl = firstSubtitle.subtitle_url;
+            
+            if (!subtitleUrl) {
+                console.warn(`视频 ${bvid} 字幕URL为空`);
+                return "暂无歌词，尽情欣赏音乐";
+            }
 
             // 如果URL以http://开头，需要转换为https://
             const secureUrl = subtitleUrl.startsWith("http://") ? subtitleUrl.replace("http://", "https://") : subtitleUrl;
 
             // 获取字幕文件内容
             const subtitleResponse = await axios.get(secureUrl);
+            
+            if (!subtitleResponse.data) {
+                console.warn(`视频 ${bvid} 字幕内容为空`);
+                return "暂无歌词，尽情欣赏音乐";
+            }
 
             // 将字幕格式转换为歌词格式
-            return this.convertSubtitleToLyrics(subtitleResponse.data);
+            const lyrics = this.convertSubtitleToLyrics(subtitleResponse.data);
+            console.log(`成功获取视频 ${bvid} 的字幕`);
+            return lyrics;
         } catch (error) {
             console.error("获取B站字幕失败：", error);
             throw error;
