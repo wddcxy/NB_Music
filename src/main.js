@@ -219,7 +219,8 @@ function createTrayMenu(win) {
             songInfo = songInfo.slice(0, 23) + "...";
         }
 
-        const menuTemplate = [   //按钮
+        /* 按钮 */
+        const menuTemplate = [
             {
                 label: "🎵 NB Music",
                 enabled: false
