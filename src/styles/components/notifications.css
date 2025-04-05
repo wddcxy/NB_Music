@@ -185,7 +185,6 @@
     transition: all 0.2s ease;
 }
 
-.account-options-container > .option:hover,
-.selected {
+.account-options-container > .option:hover {
     background: var(--rgba-16);
 }
