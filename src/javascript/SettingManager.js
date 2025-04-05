@@ -38,7 +38,9 @@ class SettingManager {
 
         volume: 50, // 音量设置
         restoreWindowState: true, // 记忆窗口状态，默认启用
-        sidebarWidth: 260 // 侧栏宽度设置
+        sidebarWidth: 260, // 侧栏宽度设置
+        echo: false, // 回声效果设置
+        convolver: false // 混响效果设置
     };
 
     constructor() {

@@ -13,6 +13,8 @@ class EffectManager {
         this.frequencyFilters = new Object();
         this.initializeAnalyzer();
         this.initializeEqualizer();
+        this.initializeEcho();
+        this.initializeConvolver();
         this.initializeElements();
         this.connectDestination();
     }
@@ -40,6 +42,21 @@ class EffectManager {
         effectdialog.querySelector(".close-btn").addEventListener("click", () => {
             effectdialog.classList.add("hide");
         });
+        effectdialogcontent.addEventListener("mousedown", (e) => {
+            e.stopPropagation();
+        });
+        effectdialog.addEventListener("mousedown", () => {
+            effectdialog.classList.add("hide");
+        });
+        if (this.settingManager.getSetting("echo") == "true") {
+            effectdialogcontent.querySelector('a.echo[data-value="true"]').classList.add("active");
+        } else {
+            effectdialogcontent.querySelector('a.echo[data-value="false"]').classList.add("active");
+        }
+        this.settingManager.addListener("echo", () => {
+            this.disconnectAll();
+            this.connectDestination();
+        });
     }
     initializeAnalyzer() {
         const analyserNode = this.audioContext.createAnalyser();
@@ -55,12 +72,7 @@ class EffectManager {
         function draw() {
             analyserNode.getByteFrequencyData(dataArray);
             canvasCtx.clearRect(0, 0, canvas.width, canvas.height);
-            const gradient = canvasCtx.createLinearGradient(
-                0,
-                canvas.height - 255,
-                canvas.width,
-                canvas.height
-            );
+            const gradient = canvasCtx.createLinearGradient(0, canvas.height - 255, canvas.width, canvas.height);
             gradient.addColorStop(0, settings.primaryColor);
             gradient.addColorStop(1, settings.secondaryColor);
             canvasCtx.fillStyle = gradient;
@@ -87,22 +99,61 @@ class EffectManager {
             filter.gain.value = 0;
             this.frequencyFilters[frequency] = filter;
             if (index != 0) {
-                this.frequencyFilters[this.frequencies[index - 1]].connect(
-                    this.frequencyFilters[frequency]
-                );
+                this.frequencyFilters[this.frequencies[index - 1]].connect(this.frequencyFilters[frequency]);
             }
         });
+    }
+
+    initializeEcho() {
+        this.delay = this.audioContext.createDelay();
+        this.delay.delayTime.value = 0.06;
+
+        this.feedback = this.audioContext.createGain();
+        this.feedback.gain.value = 0.35;
+
+        const filter = this.audioContext.createBiquadFilter();
+        filter.type = "lowpass";
+        filter.frequency.value = 1500;
+
+        this.delay.connect(this.feedback);
+        this.feedback.connect(filter);
+        filter.connect(this.delay);
+    }
+
+    initializeConvolver() {
+        this.convolver = this.audioContext.createConvolver();
     }
 
     adjustFrequency(frequency, value) {
         this.frequencyFilters[frequency].gain.value = value;
     }
 
+    disconnectAll() {
+        this.mediaSource.disconnect();
+        this.frequencyFilters[this.frequencies[this.frequencies.length - 1]].disconnect();
+        this.delay.disconnect();
+        this.delay.connect(this.feedback);
+        this.convolver.disconnect();
+        this.analyserNode.disconnect();
+    }
+
     connectDestination() {
+        const nodes = [];
         this.mediaSource.connect(this.frequencyFilters[this.frequencies[0]]);
-        this.frequencyFilters[this.frequencies[this.frequencies.length - 1]].connect(
-            this.analyserNode
-        );
+        nodes.push(this.frequencyFilters[this.frequencies[this.frequencies.length - 1]]);
+        if (this.settingManager.getSetting("echo") == "true") {
+            nodes.push(this.delay);
+        }
+        if (this.settingManager.getSetting("convolver") == "true") {
+            nodes.push(this.convolver);
+        }
+        nodes.push(this.analyserNode);
+        console.log(nodes);
+        nodes.forEach((element, index) => {
+            if (index != nodes.length - 1) {
+                element.connect(nodes[index + 1]);
+            }
+        });
         this.analyserNode.connect(this.audioContext.destination);
     }
 }

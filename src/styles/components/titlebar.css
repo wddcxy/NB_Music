@@ -53,7 +53,8 @@
 /* 搜索栏样式 */
 .titbar>.search {
   grid-column: 2;
-  padding: 16px;
+  /* padding: 16px; */
+  margin: 16px;
   -webkit-app-region: no-drag;
   z-index: 1;
   width: 60%;

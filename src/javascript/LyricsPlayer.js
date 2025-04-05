@@ -1098,7 +1098,7 @@ class LyricsPlayer {
             if (!target) return;
 
             // 获取时间戳
-            const timestamp = target.getAttribute("data-time");
+            const timestamp = target.dataset.time;
             if (!timestamp) return;
 
             // 将时间戳转换为秒
