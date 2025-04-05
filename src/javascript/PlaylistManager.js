@@ -6,14 +6,16 @@ class PlaylistManager {
      * @param {import("./AudioPlayer")} audioPlayer
      * @param {import("./LyricsPlayer")} lyricsPlayer
      * @param {import("./UIManager")} uiManager
+     * @param {import("./SettingManager")} settingManager
      */
-    constructor(audioPlayer, lyricsPlayer, uiManager) {
+    constructor(audioPlayer, lyricsPlayer, uiManager, settingManager) {
         this.playlist = [];
         this.playingNow = 0;
         this.playlistName = "默认歌单";
         this.audioPlayer = audioPlayer;
         this.lyricsPlayer = lyricsPlayer;
         this.uiManager = uiManager;
+        this.settingManager = settingManager;
         this.urlExpiryTimes = new Map();
         this.URL_VALIDITY_DURATION = 120 * 60 * 1000; // 120分钟
         this.isLoading = false;
