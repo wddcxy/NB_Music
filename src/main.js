@@ -183,7 +183,8 @@ async function getBilibiliCookies(skipLocalCookies = false) {
 }
 /*---------------------------------*/
 
-function getIconPath() {    //加载图标
+/* 加载图标 */
+function getIconPath() {
     switch (process.platform) {
         case "win32":
             return path.join(__dirname, "../icons/icon.ico");
