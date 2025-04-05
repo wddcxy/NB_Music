@@ -41,7 +41,7 @@ class App {
             this.volumeControl = new VolumeControlManager(this.settingManager, this.audioPlayer);
 
             // 2. 创建其他必要组件
-            this.playlistManager = new PlaylistManager(this.audioPlayer, this.lyricsPlayer, null); // uiManager临时为null
+            this.playlistManager = new PlaylistManager(this.audioPlayer, this.lyricsPlayer, null, this.settingManager); // uiManager临时为null
 
             // 3. 创建UI管理器（需要播放列表管理器）
             this.uiManager = new UIManager(
@@ -56,7 +56,6 @@ class App {
             this.favoriteManager = new FavoriteManager(this.playlistManager, this.uiManager);
             this.musicSearcher = new MusicSearcher();
             this.cacheManager = new CacheManager();
-            this.musiclistManager = new MusiclistManager(this.playlistManager, this.musicSearcher, this.cacheManager);
             this.loginManager = new LoginManager(this.uiManager);
             this.musiclistManager = new MusiclistManager(this.playlistManager, this.musicSearcher, this.cacheManager, this.loginManager);
             this.updateManager = new UpdateManager();
