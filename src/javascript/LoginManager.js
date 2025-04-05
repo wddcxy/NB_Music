@@ -15,14 +15,12 @@ class LoginManager {
     constructor(uiManager) {
         this.qrcodeKey = null;
         this.pollTimer = null;
-      
         this.loginDialog = document.getElementById('loginDialog');
         this.qrcodeCanvas = document.getElementById('qrcode');
         this.qrcodeStatus = document.getElementById('qrcodeStatus');
         this.loginBtn = document.querySelector('.login-btn');
         this.refreshBtn = document.getElementById('refreshQRCode');
         this.cancelBtn = document.getElementById('cancelLogin');
-
         this.uiManager = uiManager;
 
         this.isLogin = false;
@@ -252,7 +250,6 @@ class LoginManager {
 
                         // 发送给主进程设置
                         ipcRenderer.send("login-success", { cookies });
-
 
                         ipcRenderer.once('cookies-set-error', (_, error) => {
                             this.uiManager.showNotification('登录失败', 'error');
